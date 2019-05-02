@@ -18,7 +18,7 @@ const Data = async.Rendered(({ revision }) => [revision], fetchSquare)(
 
 // sync component displaying current revision + 1
 const onUpgrade = revision => {
-  transition({ revision })
+  ui.transition("main", { revision })
 }
 const Upgrade = ({ revision }) => (
   <button onClick={() => onUpgrade(revision + 1)}>
@@ -32,7 +32,9 @@ const App = ({ message, revision }) => (
   <>
     <Upgrade revision={revision} />
     <Data message={message} revision={revision} />
-    <button onClick={() => transition({ message: "Hi!" })}>hi!</button>
+    <button onClick={() => ui.transition("main", { message: "Hi!" })}>
+      hi!
+    </button>
   </>
 )
 
@@ -47,14 +49,5 @@ const render = store => {
   )
 }
 
-let store = {}
-const transition = diff => {
-  store = {
-    ...store,
-    ...diff
-  }
-
-  render(store)
-}
-
-transition({ message: "Welcome", revision: 1 })
+const ui = sc.UIController(render)
+ui.transition("main", { message: "Welcome", revision: 1 })
