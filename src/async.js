@@ -22,7 +22,7 @@
   }
 
   const ASYNC = Symbol("async-dat")
-  const AsyncData = (selector, fn) => Component => {
+  const Rendered = (selector, fn) => Component => {
     const gn = once(fn)
     const wrapped = props => (
       <Component {...props} asyncData={wrapped[ASYNC](props)} />
@@ -37,9 +37,9 @@
     const visitor = (element, instance) => {
       if (typeof element.type === "function" && element.type[ASYNC]) {
         const asyncData = element.type[ASYNC](element.props)
-        if (Task.is(asyncData)) {
+        if (lang.Task.is(asyncData)) {
           setProgress("Calculating")
-          return Task.toPromise(asyncData).then(() => {
+          return lang.Task.toPromise(asyncData).then(() => {
             setProgress(null)
           })
         }
@@ -49,8 +49,8 @@
     return reactTreeWalker(el, visitor)
   }
 
-  Object.assign(window, {
-    AsyncData,
+  window.async = {
+    Rendered,
     synchronise
-  })
+  }
 })()

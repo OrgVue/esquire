@@ -1,11 +1,11 @@
 // some expensive, async operation
 const fetchSquare = x =>
-  Task((rej, res) => {
+  lang.Task((rej, res) => {
     setTimeout(() => res(x * x), 1000)
   })
 
 // async component displaying expensive data based on current revision
-const Data = AsyncData(({ revision }) => [revision], fetchSquare)(
+const Data = async.Rendered(({ revision }) => [revision], fetchSquare)(
   ({ asyncData, message, revision }) => (
     <>
       <h2>
@@ -37,7 +37,7 @@ const App = ({ message, revision }) => (
 )
 
 const render = store => {
-  synchronise(<App {...store} />).then(() => {
+  async.synchronise(<App {...store} />).then(() => {
     ReactDOM.render(<App {...store} />, document.getElementById("app"))
   })
 }

@@ -10,7 +10,7 @@
       task.fork(rej, res)
     })
 
-  Object.assign(window, {
+  window.lang = {
     Task
-  })
+  }
 })()
