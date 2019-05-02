@@ -10,7 +10,9 @@
 
     return x => {
       if (!cache || cache[0] !== x) {
-        return f(x).map(r => {
+        setProgress("Calculating")
+        throw lang.Task.toPromise(f(x)).then(r => {
+          setProgress(null)
           cache = [x, r]
 
           return r
@@ -21,7 +23,7 @@
     }
   }
 
-  const ASYNC = Symbol("async-dat")
+  const ASYNC = Symbol("async-data")
   const Rendered = (selector, fn) => Component => {
     const gn = once(fn)
     const wrapped = props => (
@@ -32,25 +34,7 @@
     return wrapped
   }
 
-  // find Tasks and fork them
-  const synchronise = el => {
-    const visitor = (element, instance) => {
-      if (typeof element.type === "function" && element.type[ASYNC]) {
-        const asyncData = element.type[ASYNC](element.props)
-        if (lang.Task.is(asyncData)) {
-          setProgress("Calculating")
-          return lang.Task.toPromise(asyncData).then(() => {
-            setProgress(null)
-          })
-        }
-      }
-    }
-
-    return reactTreeWalker(el, visitor)
-  }
-
   window.async = {
-    Rendered,
-    synchronise
+    Rendered
   }
 })()

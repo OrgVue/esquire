@@ -1,7 +1,7 @@
 // some expensive, async operation
 const fetchSquare = x =>
   lang.Task((rej, res) => {
-    setTimeout(() => res(x * x), 1000)
+    setTimeout(() => res(x * x), 500)
   })
 
 // async component displaying expensive data based on current revision
@@ -36,10 +36,15 @@ const App = ({ message, revision }) => (
   </>
 )
 
+const cmode = ReactDOM.unstable_createRoot(document.getElementById("app"))
 const render = store => {
-  async.synchronise(<App {...store} />).then(() => {
-    ReactDOM.render(<App {...store} />, document.getElementById("app"))
-  })
+  cmode.render(
+    <React.Suspense fallback={null}>
+      <React.unstable_ConcurrentMode>
+        <App {...store} />
+      </React.unstable_ConcurrentMode>
+    </React.Suspense>
+  )
 }
 
 let store = {}
