@@ -1,13 +1,7 @@
 ;(() => {
   // Progress
   const setProgress = message => {
-    document.getElementById("progress").style.display = !message
-      ? "none"
-      : "block"
-    ReactDOM.render(
-      !message ? null : <div className="Progress">{message}</div>,
-      document.getElementById("progress")
-    )
+    document.body.style.opacity = !message ? 1 : 0.5
   }
 
   // Singleton cache for function returning Task

@@ -3,107 +3,19 @@
     <title>async react rendering</title>
     <meta charset="utf-8" />
 
-    <script
-      src="https://unpkg.com/react@16.8.6/umd/react.development.js"
-      crossorigin
-    ></script>
-    <script
-      src="https://unpkg.com/react-dom@16.8.6/umd/react-dom.development.js"
-      crossorigin
-    ></script>
-    <!-- <script
-      src="https://unpkg.com/react-dom@16.8.6/umd/react-dom-server.browser.development.js"
-      crossorigin
-    ></script> -->
-    <script src="https://unpkg.com/@babel/standalone@7.4.3/babel.min.js"></script>
+    <script src="lib/react.development.js"></script>
+    <script src="lib/react-dom.development.js"></script>
+    <script src="lib/babel.min.js"></script>
+    <script src="lib/react-tree-walker.js"></script>
 
-    <script src="lang.js"></script>
-    <script src="react-tree-walker.js"></script>
-    <script type="text/babel" src="asyncRender.js"></script>
+    <script src="src/lang.js"></script>
+    <script type="text/babel" src="src/asyncRender.js"></script>
 
-    <style>
-      .Progress {
-        background-color: #444;
-        border: 1px solid #ddd;
-        color: #fff;
-        font-size: 20px;
-        height: 100%;
-        margin: 20px;
-        padding: 16px;
-        text-align: center;
-      }
-
-      #progress {
-        height: 32px;
-        left: 0px;
-        position: absolute;
-        top: 50px;
-        width: 200px;
-      }
-    </style>
+    <style></style>
   </head>
   <body>
-    <div style="position: relative;">
-      <div id="output"></div>
-      <div id="progress"></div>
-    </div>
+    <div id="app"></div>
 
-    <script type="text/babel">
-      // some expensive, async operation
-      const fetchSquare = x =>
-        Task((rej, res) => {
-          setTimeout(() => res(x * x), 1000)
-        })
-
-      // async component displaying expensive data based on current revision
-      const Data = AsyncData(({ revision }) => [revision], fetchSquare)(
-        ({ asyncData, message, revision }) => (
-          <>
-            <h2>
-              revision {revision} data: {asyncData}
-            </h2>
-            <h3>message: {message}</h3>
-          </>
-        )
-      )
-
-      // sync component displaying current revision + 1
-      const onUpgrade = revision => {
-        transition({ revision })
-      }
-      const Upgrade = ({ revision }) => (
-        <button onClick={() => onUpgrade(revision + 1)}>
-          Upgrade to revision {revision + 1}
-        </button>
-      )
-
-      // main app
-      // The "hi!" button should not trigger rerender of components using revision
-      const App = ({ message, revision }) => (
-        <>
-          <Upgrade revision={revision} />
-          <Data message={message} revision={revision} />
-          <button onClick={() => transition({ message: "Hi!" })}>hi!</button>
-        </>
-      )
-
-      const render = store => {
-        synchronise(<App {...store} />).then(() => {
-          ReactDOM.render(<App {...store} />, document.getElementById("output"))
-        })
-      }
-
-      let store = {}
-      const transition = diff => {
-        store = {
-          ...store,
-          ...diff
-        }
-
-        render(store)
-      }
-
-      transition({ message: "Welcome", revision: 1 })
-    </script>
+    <script type="text/babel" src="src/index.jsx"></script>
   </body>
 </html>
