@@ -1,8 +1,5 @@
 // some expensive, async operation
-const fetchSquare = x =>
-  lang.Task((rej, res) => {
-    setTimeout(() => res(x * x), 500)
-  })
+const fetchSquare = x => ui.post("math", ["square", x])
 
 // async component displaying expensive data based on current revision
 const Data = async.Rendered(({ revision }) => [revision], fetchSquare)(
@@ -49,5 +46,8 @@ const render = store => {
   )
 }
 
-const ui = sc.UIController(render)
+const worker = new Worker("src/worker.js")
+
+window.ui = sc.UIController(render, worker)
+
 ui.transition("main", { message: "Welcome", revision: 1 })
