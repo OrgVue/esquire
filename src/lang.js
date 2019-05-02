@@ -1,4 +1,4 @@
-;(() => {
+lang = (() => {
   // Task e a
   const Task = fork => ({
     fork,
@@ -10,7 +10,7 @@
       task.fork(rej, res)
     })
 
-  window.lang = {
+  return {
     Task
   }
 })()

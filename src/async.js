@@ -1,4 +1,4 @@
-;(() => {
+async = (() => {
   // Progress
   const setProgress = message => {
     document.body.style.opacity = !message ? 1 : 0.5
@@ -26,15 +26,17 @@
   const ASYNC = Symbol("async-data")
   const Rendered = (selector, fn) => Component => {
     const gn = once(fn)
-    const wrapped = props => (
-      <Component {...props} asyncData={wrapped[ASYNC](props)} />
-    )
+    const wrapped = props =>
+      React.createElement(Component, {
+        ...props,
+        asyncData: wrapped[ASYNC](props)
+      })
     wrapped[ASYNC] = props => gn(...selector(props))
 
     return wrapped
   }
 
-  window.async = {
+  return {
     Rendered
   }
 })()

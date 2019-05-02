@@ -15,7 +15,7 @@
         ...diff
       }
 
-      render(store)
+      render()
 
       return []
     }
@@ -29,7 +29,10 @@
     const post = (recipient, message) =>
       lang.Task((rej, res) => {
         const id = Math.random()
-        handlers[id] = result => res(result)
+        handlers[id] = result => {
+          delete handlers[id]
+          res(result)
+        }
         worker.postMessage({
           recipient,
           id,

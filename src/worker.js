@@ -1,23 +1,24 @@
-// importScripts("lang.js")
+importScripts("lang.js", "packs.js")
 
 const handlers = {}
 
 onmessage = event => {
   const { recipient, id, message } = event.data
-  handlers[recipient](result => {
+  handlers[recipient](message).fork(console.log, result => {
     postMessage({
       id,
       result
     })
-  }, message)
+  })
 }
 
-// const t = lang.Task
+handlers["packs"] = ([op, ...args]) => packs[op](...args)
 
-handlers["math"] = (ret, message) => {
-  const [op, ...args] = message
+handlers["math"] = message =>
+  lang.Task((rej, res) => {
+    const [op, ...args] = message
 
-  setTimeout(() => {
-    ret(args[0] * args[0])
-  }, 500)
-}
+    setTimeout(() => {
+      res(args[0] * args[0])
+    }, 500)
+  })
