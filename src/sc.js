@@ -4,7 +4,7 @@
    * @param {*} render
    * @param {Worker} worker
    */
-  const UIController = (render, worker) => {
+  const UIController = (render, worker, progress) => {
     let state = undefined
     let store = {}
 
@@ -20,7 +20,9 @@
       return []
     }
 
-    const handlers = {}
+    const handlers = {
+      progress
+    }
     worker.onmessage = event => {
       const { id, result } = event.data
       handlers[id](result)

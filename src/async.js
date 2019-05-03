@@ -1,7 +1,19 @@
 async = (() => {
   // Progress
+  let timer
   const setProgress = message => {
-    document.body.style.opacity = !message ? 1 : 0.5
+    if (timer !== undefined) clearTimeout(timer)
+
+    timer = setTimeout(
+      () => {
+        document.getElementById("progress").style.display = !message
+          ? "none"
+          : "flex"
+        document.getElementById("progress-message").innerText = message || ""
+        document.getElementById("app").style.opacity = !message ? 1 : 0.5
+      },
+      !message ? 42 : 250
+    )
   }
 
   // Singleton cache for function returning Task
@@ -10,7 +22,7 @@ async = (() => {
 
     return x => {
       if (!cache || cache[0] !== x) {
-        setProgress("Calculating")
+        // setProgress("Calculating")
         throw lang.Task.toPromise(f(x)).then(r => {
           setProgress(null)
           cache = [x, r]
@@ -37,6 +49,7 @@ async = (() => {
   }
 
   return {
-    Rendered
+    Rendered,
+    setProgress
   }
 })()

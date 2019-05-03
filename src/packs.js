@@ -40,7 +40,28 @@ packs = (() => {
       return lang.Task.of(packs.filter(pack => pack.id === id)[0])
     })
 
+  const items = lang.Task.memo(id =>
+    lang.Task.do(function*() {
+      const pack = yield get(id)
+
+      const reader = yield network.requestStream({
+        headers: {
+          accept: "application/rvdh",
+          "x-accept-encoding": "none"
+        },
+        path: `/GLOBAL/dataset/${pack.dataset.id}/items`
+      })
+
+      const items = yield network.readItems(reader, cnt =>
+        postMessage({ id: "progress", result: `${cnt} items` })
+      )
+
+      return lang.Task.of(items)
+    })
+  )
+
   return {
+    items,
     get,
     list
   }

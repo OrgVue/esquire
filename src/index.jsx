@@ -10,7 +10,7 @@ const render = () => {
 }
 
 const worker = new Worker("src/worker.js")
-window.ui = sc.UIController(render, worker)
+window.ui = sc.UIController(render, worker, async.setProgress)
 
 fetch("/tenants/authenticator", {
   body: JSON.stringify({
