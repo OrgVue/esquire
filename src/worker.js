@@ -1,4 +1,4 @@
-importScripts("lang.js", "packs.js")
+importScripts("lang.js", "network.js", "packs.js")
 
 const handlers = {}
 
@@ -13,12 +13,3 @@ onmessage = event => {
 }
 
 handlers["packs"] = ([op, ...args]) => packs[op](...args)
-
-handlers["math"] = message =>
-  lang.Task((rej, res) => {
-    const [op, ...args] = message
-
-    setTimeout(() => {
-      res(args[0] * args[0])
-    }, 500)
-  })

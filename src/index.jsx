@@ -10,8 +10,15 @@ const render = () => {
 }
 
 const worker = new Worker("src/worker.js")
-
 window.ui = sc.UIController(render, worker)
 
-// Go, now. Go!
-ui.transition("homescreen", {})
+fetch("/tenants/authenticator", {
+  body: JSON.stringify({
+    login: "rodinhart@gmail.com",
+    password: "Wachtwoord123"
+  }),
+  method: "POST"
+}).then(response => {
+  // Go, now. Go!
+  ui.transition("homescreen", {})
+})

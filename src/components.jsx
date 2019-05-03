@@ -1,31 +1,52 @@
 ;(() => {
   const listPacks = () => ui.post("packs", ["list"])
-  const onPack = name => ui.transition("pack", { pack: name })
+  const onPack = id => ui.transition("pack", { pack: id })
+  const wordCase = s => `${s[0].toUpperCase()}${s.substr(1).toLowerCase()}`
   const Packs = async.Rendered(({}) => [], listPacks)(({ asyncData }) => (
-    <ol>
-      {asyncData.map(({ name }) => (
-        <li key={name} onClick={() => onPack(name)}>
-          {name}
-        </li>
-      ))}
-    </ol>
+    <>
+      <div className="Toolbar">
+        <div className="Logo">
+          <b>Org</b>Vue
+        </div>
+      </div>
+      <div className="Packs">
+        {asyncData.map(pack => (
+          <div className="Pack" key={pack.id} onClick={() => onPack(pack.id)}>
+            {pack.dataset.metadata.name}
+            <br />
+            <span className="Type">{wordCase(pack.dataset.metadata.type)}</span>
+          </div>
+        ))}
+      </div>
+    </>
   ))
 
-  const getPack = name => ui.post("packs", ["get", name])
+  const getPack = id => ui.post("packs", ["get", id])
   const Pack = async.Rendered(() => [ui.getStore().pack], getPack)(
-    ({ asyncData }) => (
-      <>
-        <button onClick={() => ui.transition("homescreen")}>Homescreen</button>
-        <h2>{asyncData.name}</h2>
-        <div>Last modified: {"" + asyncData.modified}</div>
-      </>
-    )
+    ({ asyncData: pack }) => {
+      return (
+        <>
+          <h2>{pack.dataset.metadata.name}</h2>
+          <div>{wordCase(pack.dataset.metadata.type)}</div>
+        </>
+      )
+    }
   )
 
+  const onHome = () => ui.transition("homescreen")
   const App = ({ state }) =>
     ({
       homescreen: <Packs />,
-      pack: <Pack />
+      pack: (
+        <>
+          <div className="Toolbar">
+            <div className="Logo" onClick={onHome}>
+              <b>Org</b>Vue
+            </div>
+          </div>
+          <Pack />
+        </>
+      )
     }[state])
 
   window.components = {
