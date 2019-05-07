@@ -23,7 +23,9 @@ body {
 
 .Filter .Panel .Row {
   cursor: pointer;
-  padding: 1px 4px 2px 4px;
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 6px 2px 6px;
 }
 
 .Filter .Panel .Selected {
@@ -64,7 +66,7 @@ body {
   /* border: 2px solid #000; */
   border-radius: 8px;
   color: #fff;
-  font-size: 24px;
+  font-size: 22px;
   padding: 4px 32px 8px 32px;
 }
 

@@ -1,4 +1,4 @@
-importScripts("lang.js", "network.js", "packs.js")
+importScripts("lang.js", "indices.js", "network.js", "packs.js")
 
 const handlers = {}
 

@@ -32,7 +32,7 @@
       if (selected[property.key]) {
         delete selected[property.key]
       } else {
-        selected[property.key] = true
+        selected[property.key] = {}
       }
 
       return {
@@ -41,14 +41,37 @@
       }
     })
 
+  const onBucket = (property, bucket) =>
+    ui.transition("pack", store => {
+      const selected = { ...store.selected[property.key] }
+      if (selected[bucket.name]) {
+        delete selected[bucket.name]
+      } else {
+        selected[bucket.name] = true
+      }
+
+      return {
+        ...store,
+        selected: {
+          ...store.selected,
+          [property.key]: selected
+        }
+      }
+    })
+
   const FilterColumn = async.Rendered(
-    ({ property }) => [ui.getStore().pack, property.key],
+    ({ property, selected }) => [ui.getStore().pack, property.key, selected],
     selectors.getBuckets
   )(({ asyncData: buckets, property }) => (
     <div className="Panel">
-      {buckets.map(bucket => (
-        <div key={bucket.name} className="Row">
-          {bucket.name}
+      {buckets.slice(0, 100).map(bucket => (
+        <div
+          key={bucket.name}
+          className={bucket.selected ? "Row Selected" : "Row"}
+          onClick={() => onBucket(property, bucket)}
+        >
+          <div>{bucket.name}</div>
+          <div>{indices.count(bucket.nodes)}</div>
         </div>
       ))}
     </div>
@@ -75,17 +98,21 @@
           ))}
         </div>
         {sels.map(property => (
-          <FilterColumn key={property.key} property={property} />
+          <FilterColumn
+            key={property.key}
+            property={property}
+            selected={selected}
+          />
         ))}
       </div>
     )
   })
 
   const Pack = async.Rendered(
-    () => [ui.getStore().pack],
+    () => [ui.getStore().pack, ui.getStore().selected],
     selectors.getPackData
   )(({ asyncData }) => {
-    const { items, pack } = asyncData
+    const { nodes, pack } = asyncData
 
     return (
       <>
@@ -102,7 +129,7 @@
 
         <Filter selected={ui.getStore().selected} />
 
-        <div>{items.length} items</div>
+        <div>{indices.count(nodes)} items</div>
 
         {/* <ul>
           {items.map((item, i) => (

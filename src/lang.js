@@ -26,15 +26,15 @@ lang = (() => {
   Task.is = x => x && typeof x.fork === "function"
 
   Task.memo = fn => {
-    let cache
+    const cache = {}
 
     return (...args) =>
       Task((rej, res) => {
         const hash = JSON.stringify(args)
-        if (cache && cache[0] === hash) return res(cache[1])
+        if (cache.hasOwnProperty(hash)) return res(cache[hash])
 
         fn(...args).fork(rej, r => {
-          cache = [hash, r]
+          cache[hash] = r
           res(r)
         })
       })

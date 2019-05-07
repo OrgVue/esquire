@@ -1,2 +1,3 @@
+- caching of items
 - build data first, then components, then display tree?
 - pinpoint singleton caches (items?)
