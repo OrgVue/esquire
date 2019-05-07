@@ -90,9 +90,112 @@ packs = (() => {
     })
   )
 
+  const tree = lang.Task.memo(id =>
+    lang.Task.do(function*() {
+      postMessage({ id: "progress", result: `Building tree` })
+
+      const pack = yield get(id)
+      const keyId = pack.metadata.paths[0].id
+      const keyParent = pack.metadata.paths[0].parentId
+      const _nodes = yield items(id)
+
+      const ref = {
+        children: []
+      }
+
+      ref.lookup = {}
+
+      // read data and index nodes
+      const { data, nodes } = _nodes.reduce(
+        (r, node) => {
+          const item = {
+            id: node.properties[keyId],
+            node: {
+              children: [],
+              node
+            },
+            pid: node.properties[keyParent]
+          }
+          ref.lookup[node.id] = item.node
+
+          r.data.push(item)
+          if (!r.nodes[item.id]) {
+            r.nodes[item.id] = item
+          } // typed hash of id?
+
+          return r
+        },
+        {
+          data: [],
+          nodes: {}
+        }
+      )
+
+      // set parents
+      return lang.Task.of(
+        data.reduce((r, item) => {
+          if (nodes[item.pid]) {
+            // check parent for cycles
+            let c = nodes[item.pid]
+            while (c && c.id !== item.id) {
+              c = c.parent
+            }
+            if (!c) {
+              item.parent = nodes[item.pid]
+              item.parent.node.children.push(item.node)
+              item.node.parent = item.parent.node
+
+              return r
+            }
+          }
+
+          item.parent = {}
+          ref.children.push(item.node)
+          item.node.parent = ref
+
+          return r
+        }, ref)
+      )
+    })
+  )
+
+  const calcProperty = lang.Task.memo((id, key) =>
+    lang.Task.do(function*() {
+      const nodes = yield items(id)
+
+      postMessage({ id: "progress", result: `Calculating ${key}` })
+      if (key === "_depth") {
+        const ref = yield tree(id)
+        nodes.forEach(node => {
+          let depth = 0
+          let c = ref.lookup[node.id]
+          while (c.parent) {
+            depth += 1
+            c = c.parent
+          }
+
+          node.properties[key] = (" " + depth).substr(-2)
+        })
+      } else if (key === "_outgoing") {
+        const ref = yield tree(id)
+        nodes.forEach(node => {
+          let c = ref.lookup[node.id]
+
+          node.properties[key] = (" " + c.children.length).substr(-2)
+        })
+      }
+
+      return lang.Task.of()
+    })
+  )
+
   const groups = lang.Task.memo((id, key) =>
     lang.Task.do(function*() {
       postMessage({ id: "progress", result: `Grouping ${key}` })
+
+      const props = yield properties(id)
+      const property = props.filter(p => p.key === key)[0]
+      if (property.isCalc) yield calcProperty(id, key)
 
       const nodes = yield items(id)
 
@@ -115,7 +218,18 @@ packs = (() => {
     lang.Task.do(function*() {
       const pack = yield get(id)
 
-      return lang.Task.of(pack.dataset.properties.slice().sort(sortFn))
+      return lang.Task.of(
+        [
+          { key: "_depth", isCalc: true, metadata: { name: "Depth" } },
+          {
+            key: "_outgoing",
+            isCalc: true,
+            metadata: { name: "Outgoing count" }
+          }
+        ]
+          .concat(pack.dataset.properties)
+          .sort(sortFn)
+      )
     })
   )
 

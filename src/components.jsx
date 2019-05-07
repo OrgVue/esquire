@@ -64,7 +64,7 @@
     selectors.getBuckets
   )(({ asyncData: buckets, property }) => (
     <div className="Panel">
-      {buckets.slice(0, 100).map(bucket => (
+      {buckets.slice(0, 2000).map(bucket => (
         <div
           key={bucket.name}
           className={bucket.selected ? "Row Selected" : "Row"}
@@ -93,7 +93,11 @@
               key={property.key}
               onClick={() => onProperty(property)}
             >
-              {property.metadata.name}
+              {property.isCalc ? (
+                <i>{property.metadata.name}</i>
+              ) : (
+                property.metadata.name
+              )}
             </div>
           ))}
         </div>
