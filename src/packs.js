@@ -40,9 +40,32 @@ packs = (() => {
       return lang.Task.of(packs.filter(pack => pack.id === id)[0])
     })
 
+  const getDb = () => {
+    const db = new Dexie("esquire")
+
+    db.version(1).stores({
+      items: "id"
+    })
+
+    return db
+  }
+
   const items = lang.Task.memo(id =>
     lang.Task.do(function*() {
       const pack = yield get(id)
+
+      const db = getDb()
+
+      const cache = yield lang.Task.fromPromise(
+        db.items
+          .where("id")
+          .equals(id)
+          .first()
+      )
+
+      if (cache !== undefined) {
+        return lang.Task.of(cache.data)
+      }
 
       const reader = yield network.requestStream({
         headers: {
@@ -54,6 +77,13 @@ packs = (() => {
 
       const items = yield network.readItems(reader, cnt =>
         postMessage({ id: "progress", result: `${cnt} items` })
+      )
+
+      yield lang.Task.fromPromise(
+        db.items.add({
+          id,
+          data: items
+        })
       )
 
       return lang.Task.of(items)
@@ -118,10 +148,32 @@ packs = (() => {
 
   const buckets = lang.Task.memo((id, key, selected) =>
     lang.Task.do(function*() {
-      const grps = yield groups(id, key)
-      const mask = yield filteredNodes(id, selected)
+      const nodes = yield items(id)
+      let mask = nodes.reduce((r, node, i) => {
+        indices.set(r, i)
+        return r
+      }, indices.create())
 
       postMessage({ id: "progress", result: `Bucketing ${key}` })
+
+      // filter except self
+      for (const k in selected) {
+        if (k === key || Object.entries(selected[k]).length === 0) continue
+
+        const grps = yield groups(id, k)
+        const sum = grps.reduce((r, [name, nodes]) => {
+          if (!selected[k][name]) return r
+
+          return indices.union(r, nodes)
+        }, undefined)
+        if (sum !== undefined) {
+          // can this happen?
+          mask = indices.intersect(mask, sum)
+        }
+      }
+
+      const grps = yield groups(id, key)
+
       const result = grps.map(([val, nodes]) => ({
         name: String(val),
         nodes: indices.intersect(mask, nodes),

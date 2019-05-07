@@ -1,4 +1,10 @@
-importScripts("lang.js", "indices.js", "network.js", "packs.js")
+importScripts(
+  "../lib/dexie.js",
+  "lang.js",
+  "indices.js",
+  "network.js",
+  "packs.js"
+)
 
 const handlers = {}
 

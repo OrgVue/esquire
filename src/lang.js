@@ -21,6 +21,8 @@ lang = (() => {
       return step().fork(err, res)
     })
 
+  Task.fromPromise = p => Task((rej, res) => p.then(res, rej))
+
   Task.of = x => Task((rej, res) => res(x))
 
   Task.is = x => x && typeof x.fork === "function"

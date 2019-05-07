@@ -25,7 +25,9 @@ async = (() => {
       return
     }
 
-    queue[0].fork(rej, () => {
+    const { hash, f, args, cache } = queue[0]
+    f(...args).fork(rej, r => {
+      cache[hash] = r
       queue.shift()
       dequeue(res, rej)
     })
@@ -39,7 +41,9 @@ async = (() => {
       const hash = JSON.stringify(args)
       if (cache.hasOwnProperty(hash)) return cache[hash]
 
-      queue.push(f(...args).map(r => (cache[hash] = r)))
+      if (queue.every(item => item.hash !== hash || item.f !== f)) {
+        queue.push({ hash, f, args, cache })
+      }
 
       if (queue.length === 1) {
         throw new Promise(dequeue)
