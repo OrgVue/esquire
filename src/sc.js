@@ -10,9 +10,13 @@
 
     const transition = (event, diff) => {
       state = event
-      store = {
-        ...store,
-        ...diff
+      if (typeof diff === "function") {
+        store = diff(store)
+      } else {
+        store = {
+          ...store,
+          ...diff
+        }
       }
 
       render()

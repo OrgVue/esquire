@@ -20,5 +20,7 @@ fetch("/tenants/authenticator", {
   method: "POST"
 }).then(response => {
   // Go, now. Go!
-  ui.transition("homescreen", {})
+  ui.transition("homescreen", {
+    selected: { Area: true, Department: true }
+  })
 })

@@ -26,11 +26,67 @@
     )
   )
 
+  const onProperty = property =>
+    ui.transition("pack", store => {
+      const selected = { ...store.selected }
+      if (selected[property.key]) {
+        delete selected[property.key]
+      } else {
+        selected[property.key] = true
+      }
+
+      return {
+        ...store,
+        selected
+      }
+    })
+
+  const FilterColumn = async.Rendered(
+    ({ property }) => [ui.getStore().pack, property.key],
+    selectors.getBuckets
+  )(({ asyncData: buckets, property }) => (
+    <div className="Panel">
+      {buckets.map(bucket => (
+        <div key={bucket.name} className="Row">
+          {bucket.name}
+        </div>
+      ))}
+    </div>
+  ))
+
+  const Filter = async.Rendered(
+    () => [ui.getStore().pack],
+    selectors.getFilterData
+  )(({ asyncData, selected }) => {
+    const { properties } = asyncData
+    const sels = properties.filter(property => selected[property.key])
+
+    return (
+      <div className="Filter">
+        <div className="Panel">
+          {properties.map(property => (
+            <div
+              className={selected[property.key] ? "Row Selected" : "Row"}
+              key={property.key}
+              onClick={() => onProperty(property)}
+            >
+              {property.metadata.name}
+            </div>
+          ))}
+        </div>
+        {sels.map(property => (
+          <FilterColumn key={property.key} property={property} />
+        ))}
+      </div>
+    )
+  })
+
   const Pack = async.Rendered(
     () => [ui.getStore().pack],
     selectors.getPackData
   )(({ asyncData }) => {
     const { items, pack } = asyncData
+
     return (
       <>
         <div className="Toolbar">
@@ -43,6 +99,8 @@
           </div>
           <div>Global (Admin)</div>
         </div>
+
+        <Filter selected={ui.getStore().selected} />
 
         <div>{items.length} items</div>
 

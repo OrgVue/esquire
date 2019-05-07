@@ -17,21 +17,35 @@ async = (() => {
   }
 
   // Singleton cache for function returning Task
-  const once = f => {
+  const once2 = f => {
     let cache
 
-    return x => {
-      if (!cache || cache[0] !== x) {
-        // setProgress("Calculating")
-        throw lang.Task.toPromise(f(x)).then(r => {
-          setProgress(null)
-          cache = [x, r]
+    return (...args) => {
+      const hash = JSON.stringify(args)
+      if (cache && cache[0] === hash) return cache[1]
 
-          return r
-        })
-      }
+      throw lang.Task.toPromise(f(...args)).then(r => {
+        setProgress(null)
+        cache = [hash, r]
 
-      return cache[1]
+        return r
+      })
+    }
+  }
+
+  const once = f => {
+    let cache = {}
+
+    return (...args) => {
+      const hash = JSON.stringify(args)
+      if (cache.hasOwnProperty(hash)) return cache[hash]
+
+      throw lang.Task.toPromise(f(...args)).then(r => {
+        setProgress(null)
+        cache[hash] = r
+
+        return r
+      })
     }
   }
 

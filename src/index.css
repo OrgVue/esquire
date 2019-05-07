@@ -7,6 +7,29 @@ body {
   position: relative;
 }
 
+.Filter {
+  display: flex;
+  font-size: 12px;
+}
+
+.Filter .Panel {
+  background-color: #fff;
+  border: 1px solid #e8e8e8;
+  height: 300px;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  width: 200px;
+}
+
+.Filter .Panel .Row {
+  cursor: pointer;
+  padding: 1px 4px 2px 4px;
+}
+
+.Filter .Panel .Selected {
+  background: #bdf;
+}
+
 .Packs {
   display: flex;
   flex-wrap: wrap;

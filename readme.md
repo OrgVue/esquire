@@ -1,0 +1,2 @@
+- repeated components are executed in parallel (FilterColumn)
+- build data first, then components, then display tree?

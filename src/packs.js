@@ -1,3 +1,6 @@
+const sortFn = (a, b) =>
+  a.metadata.name.toLowerCase().localeCompare(b.metadata.name.toLowerCase())
+
 packs = (() => {
   const list = lang.Task.memo(() =>
     lang.Task.do(function*() {
@@ -23,12 +26,7 @@ packs = (() => {
             return view
           })
           .filter(view => view.dataset && view.metadata.name === "_default")
-          .sort((a, b) => {
-            const aa = a.dataset.metadata.name.toLowerCase()
-            const bb = b.dataset.metadata.name.toLowerCase()
-
-            return aa.localeCompare(bb)
-          })
+          .sort((a, b) => sortFn(a.dataset, b.dataset))
       )
     })
   )
@@ -60,9 +58,25 @@ packs = (() => {
     })
   )
 
+  const properties = lang.Task.memo(id =>
+    lang.Task.do(function*() {
+      const pack = yield get(id)
+
+      return lang.Task.of(pack.dataset.properties.slice().sort(sortFn))
+    })
+  )
+
+  const buckets = lang.Task.memo((id, key) =>
+    lang.Task.do(function*() {
+      return lang.Task.of([{ name: "0-10" }])
+    })
+  )
+
   return {
+    buckets,
     items,
     get,
-    list
+    list,
+    properties
   }
 })()
