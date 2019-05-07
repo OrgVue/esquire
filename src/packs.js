@@ -2,6 +2,7 @@ const sortFn = (a, b) =>
   a.metadata.name.toLowerCase().localeCompare(b.metadata.name.toLowerCase())
 
 packs = (() => {
+  // List the packs
   const list = lang.Task.memo(() =>
     lang.Task.do(function*() {
       postMessage({ id: "progress", result: `Loading datasets` })
@@ -33,6 +34,7 @@ packs = (() => {
     })
   )
 
+  // Get a pack by id
   const get = id =>
     lang.Task.do(function*() {
       const packs = yield list()
@@ -40,6 +42,7 @@ packs = (() => {
       return lang.Task.of(packs.filter(pack => pack.id === id)[0])
     })
 
+  // Get the indexedDB db
   const getDb = () => {
     const db = new Dexie("esquire")
 
@@ -50,6 +53,7 @@ packs = (() => {
     return db
   }
 
+  // Retrieve items by pack id
   const items = lang.Task.memo(id =>
     lang.Task.do(function*() {
       const pack = yield get(id)
@@ -90,6 +94,7 @@ packs = (() => {
     })
   )
 
+  // Get tree by pack id
   const tree = lang.Task.memo(id =>
     lang.Task.do(function*() {
       postMessage({ id: "progress", result: `Building tree` })
@@ -159,6 +164,7 @@ packs = (() => {
     })
   )
 
+  // Calculate property for given pack id and property key
   const calcProperty = lang.Task.memo((id, key) =>
     lang.Task.do(function*() {
       const nodes = yield items(id)
@@ -189,6 +195,7 @@ packs = (() => {
     })
   )
 
+  // Group values for pack id and property key
   const groups = lang.Task.memo((id, key) =>
     lang.Task.do(function*() {
       postMessage({ id: "progress", result: `Grouping ${key}` })
@@ -214,6 +221,7 @@ packs = (() => {
     })
   )
 
+  // List properties by pack id
   const properties = lang.Task.memo(id =>
     lang.Task.do(function*() {
       const pack = yield get(id)
@@ -233,6 +241,7 @@ packs = (() => {
     })
   )
 
+  // Get the mask of filtered nodes
   const filteredNodes = lang.Task.memo((id, filter) =>
     lang.Task.do(function*() {
       const nodes = yield items(id)
@@ -261,6 +270,7 @@ packs = (() => {
     })
   )
 
+  // List bucket with filtered nodes for pack id, property key and filter state
   const buckets = lang.Task.memo((id, key, filter) =>
     lang.Task.do(function*() {
       const nodes = yield items(id)
@@ -299,6 +309,7 @@ packs = (() => {
     })
   )
 
+  // Export
   return {
     buckets,
     filteredNodes,

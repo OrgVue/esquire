@@ -26,6 +26,7 @@ selectors = (() => {
       })
     })
 
+  // Export
   return {
     getBuckets,
     getFilterData,

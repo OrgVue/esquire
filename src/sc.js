@@ -1,13 +1,9 @@
-;(() => {
-  /**
-   *
-   * @param {*} render
-   * @param {Worker} worker
-   */
+sc = (() => {
   const UIController = (render, worker, progress) => {
     let state = undefined
     let store = {}
 
+    // Transition to new state and store
     const transition = (event, diff) => {
       state = event
       if (typeof diff === "function") {
@@ -24,6 +20,7 @@
       return []
     }
 
+    // Receive message from web worker and invoke relevant handler
     const handlers = {
       progress
     }
@@ -32,6 +29,7 @@
       handlers[id](result)
     }
 
+    // Post message to web worker and wait for response.
     const post = (recipient, message) =>
       lang.Task((rej, res) => {
         const id = Math.random()
@@ -54,7 +52,8 @@
     }
   }
 
-  window.sc = {
+  // Export
+  return {
     UIController
   }
 })()

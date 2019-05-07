@@ -1,6 +1,6 @@
 ;(() => {
+  // Display the packs
   const onPack = id => ui.transition("pack", { pack: id })
-  const wordCase = s => `${s[0].toUpperCase()}${s.substr(1).toLowerCase()}`
   const Packs = async.Rendered(({}) => [], selectors.listPacks)(
     ({ asyncData }) => (
       <>
@@ -17,7 +17,7 @@
               {pack.dataset.metadata.name}
               <br />
               <span className="Type">
-                {wordCase(pack.dataset.metadata.type)}
+                {lang.wordCase(pack.dataset.metadata.type)}
               </span>
             </div>
           ))}
@@ -26,6 +26,7 @@
     )
   )
 
+  // Handle click on property in filter
   const onProperty = property =>
     ui.transition("pack", store => {
       const filter = { ...store.filter }
@@ -41,6 +42,7 @@
       }
     })
 
+  // Handle click on bucket in filter
   const onBucket = (property, bucket) =>
     ui.transition("pack", store => {
       const filter = { ...store.filter[property.key] }
@@ -59,6 +61,7 @@
       }
     })
 
+  // Display list of buckets in filter
   const FilterColumn = async.Rendered(
     ({ property, filter }) => [ui.getStore().pack, property.key, filter],
     selectors.getBuckets
@@ -77,6 +80,7 @@
     </div>
   ))
 
+  // Display filter
   const Filter = async.Rendered(
     () => [ui.getStore().pack],
     selectors.getFilterData
@@ -112,6 +116,7 @@
     )
   })
 
+  // Display a pack
   const Pack = async.Rendered(
     () => [ui.getStore().pack, ui.getStore().filter],
     selectors.getPackData
@@ -126,7 +131,7 @@
           </div>
           <div className="Title">
             <b>{pack.dataset.metadata.name}</b> |{" "}
-            {wordCase(pack.dataset.metadata.type)}
+            {lang.wordCase(pack.dataset.metadata.type)}
           </div>
           <div>Global (Admin)</div>
         </div>
@@ -138,13 +143,17 @@
     )
   })
 
+  // Handle click on homescreen
   const onHome = () => ui.transition("homescreen")
+
+  // Display the app
   const App = ({ state }) =>
     ({
       homescreen: <Packs />,
       pack: <Pack />
     }[state])
 
+  // Export
   window.components = {
     App
   }

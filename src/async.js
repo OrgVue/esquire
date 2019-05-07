@@ -1,5 +1,5 @@
 async = (() => {
-  // Progress
+  // Display message of progress
   let timer
   const setProgress = message => {
     if (timer !== undefined) clearTimeout(timer)
@@ -16,7 +16,7 @@ async = (() => {
     )
   }
 
-  // queue async render tasks to ensure sequential execution
+  // Queue async render tasks to ensure sequential execution
   const queue = []
   const dequeue = (res, rej) => {
     if (queue.length === 0) {
@@ -33,7 +33,7 @@ async = (() => {
     })
   }
 
-  // queue and cache async selectors
+  // Queue and cache async selectors
   const memo = f => {
     let cache = {}
 
@@ -53,7 +53,7 @@ async = (() => {
     }
   }
 
-  // component with async data
+  // Component with async data selector
   const ASYNC = Symbol("async-data")
   const Rendered = (selector, fn) => Component => {
     const gn = memo(fn)
@@ -67,6 +67,7 @@ async = (() => {
     return wrapped
   }
 
+  // Export
   return {
     Rendered,
     setProgress

@@ -1,3 +1,4 @@
+// Set react to concurrent mode
 const cmode = ReactDOM.unstable_createRoot(document.getElementById("app"))
 const render = () => {
   cmode.render(
@@ -9,9 +10,11 @@ const render = () => {
   )
 }
 
+// Start web worker
 const worker = new Worker("src/worker.js")
 window.ui = sc.UIController(render, worker, async.setProgress)
 
+// Authenticate
 fetch("/tenants/authenticator", {
   body: JSON.stringify({
     login: "rodinhart@gmail.com",

@@ -47,7 +47,10 @@ lang = (() => {
       task.fork(rej, res)
     })
 
+  const wordCase = s => `${s[0].toUpperCase()}${s.substr(1).toLowerCase()}`
+
   return {
-    Task
+    Task,
+    wordCase
   }
 })()
