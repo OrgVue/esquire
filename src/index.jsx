@@ -21,6 +21,6 @@ fetch("/tenants/authenticator", {
 }).then(response => {
   // Go, now. Go!
   ui.transition("homescreen", {
-    selected: {}
+    filter: {}
   })
 })

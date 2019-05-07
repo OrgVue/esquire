@@ -99,7 +99,8 @@ packs = (() => {
       return lang.Task.of(
         Object.entries(
           nodes.reduce((r, node, i) => {
-            const val = node.properties[key]
+            let val = node.properties[key]
+            if (val === undefined) val = "zzz(Blank)"
             if (!r[val]) r[val] = indices.create()
             indices.set(r[val], i)
 
@@ -118,7 +119,7 @@ packs = (() => {
     })
   )
 
-  const filteredNodes = lang.Task.memo((id, selected) =>
+  const filteredNodes = lang.Task.memo((id, filter) =>
     lang.Task.do(function*() {
       const nodes = yield items(id)
       let mask = nodes.reduce((r, node, i) => {
@@ -126,12 +127,12 @@ packs = (() => {
         return r
       }, indices.create())
 
-      for (const key in selected) {
-        if (Object.entries(selected[key]).length === 0) continue
+      for (const key in filter) {
+        if (Object.entries(filter[key]).length === 0) continue
 
         const grps = yield groups(id, key)
         const sum = grps.reduce((r, [name, nodes]) => {
-          if (!selected[key][name]) return r
+          if (!filter[key][name]) return r
 
           return indices.union(r, nodes)
         }, undefined)
@@ -146,7 +147,7 @@ packs = (() => {
     })
   )
 
-  const buckets = lang.Task.memo((id, key, selected) =>
+  const buckets = lang.Task.memo((id, key, filter) =>
     lang.Task.do(function*() {
       const nodes = yield items(id)
       let mask = nodes.reduce((r, node, i) => {
@@ -157,12 +158,12 @@ packs = (() => {
       postMessage({ id: "progress", result: `Bucketing ${key}` })
 
       // filter except self
-      for (const k in selected) {
-        if (k === key || Object.entries(selected[k]).length === 0) continue
+      for (const k in filter) {
+        if (k === key || Object.entries(filter[k]).length === 0) continue
 
         const grps = yield groups(id, k)
         const sum = grps.reduce((r, [name, nodes]) => {
-          if (!selected[k][name]) return r
+          if (!filter[k][name]) return r
 
           return indices.union(r, nodes)
         }, undefined)
@@ -177,7 +178,7 @@ packs = (() => {
       const result = grps.map(([val, nodes]) => ({
         name: String(val),
         nodes: indices.intersect(mask, nodes),
-        selected: selected[key][val]
+        selected: filter[key][val]
       }))
 
       return lang.Task.of(result)

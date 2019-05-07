@@ -1,9 +1,9 @@
 selectors = (() => {
   const listPacks = () => ui.post("packs", ["list"])
 
-  const getBuckets = (id, key, selected) =>
+  const getBuckets = (id, key, filter) =>
     lang.Task.do(function*() {
-      const buckets = yield ui.post("packs", ["buckets", id, key, selected])
+      const buckets = yield ui.post("packs", ["buckets", id, key, filter])
 
       return lang.Task.of(buckets)
     })
@@ -15,10 +15,10 @@ selectors = (() => {
       return lang.Task.of({ properties })
     })
 
-  const getPackData = (id, selected) =>
+  const getPackData = (id, filter) =>
     lang.Task.do(function*() {
       const pack = yield ui.post("packs", ["get", id])
-      const nodes = yield ui.post("packs", ["filteredNodes", id, selected])
+      const nodes = yield ui.post("packs", ["filteredNodes", id, filter])
 
       return lang.Task.of({
         nodes,

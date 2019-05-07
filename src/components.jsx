@@ -28,39 +28,39 @@
 
   const onProperty = property =>
     ui.transition("pack", store => {
-      const selected = { ...store.selected }
-      if (selected[property.key]) {
-        delete selected[property.key]
+      const filter = { ...store.filter }
+      if (filter[property.key]) {
+        delete filter[property.key]
       } else {
-        selected[property.key] = {}
+        filter[property.key] = {}
       }
 
       return {
         ...store,
-        selected
+        filter
       }
     })
 
   const onBucket = (property, bucket) =>
     ui.transition("pack", store => {
-      const selected = { ...store.selected[property.key] }
-      if (selected[bucket.name]) {
-        delete selected[bucket.name]
+      const filter = { ...store.filter[property.key] }
+      if (filter[bucket.name]) {
+        delete filter[bucket.name]
       } else {
-        selected[bucket.name] = true
+        filter[bucket.name] = true
       }
 
       return {
         ...store,
-        selected: {
-          ...store.selected,
-          [property.key]: selected
+        filter: {
+          ...store.filter,
+          [property.key]: filter
         }
       }
     })
 
   const FilterColumn = async.Rendered(
-    ({ property, selected }) => [ui.getStore().pack, property.key, selected],
+    ({ property, filter }) => [ui.getStore().pack, property.key, filter],
     selectors.getBuckets
   )(({ asyncData: buckets, property }) => (
     <div className="Panel">
@@ -70,7 +70,7 @@
           className={bucket.selected ? "Row Selected" : "Row"}
           onClick={() => onBucket(property, bucket)}
         >
-          <div>{bucket.name}</div>
+          <div>{bucket.name.replace("zzz", "")}</div>
           <div>{indices.count(bucket.nodes)}</div>
         </div>
       ))}
@@ -80,16 +80,16 @@
   const Filter = async.Rendered(
     () => [ui.getStore().pack],
     selectors.getFilterData
-  )(({ asyncData, selected }) => {
+  )(({ asyncData, filter }) => {
     const { properties } = asyncData
-    const sels = properties.filter(property => selected[property.key])
+    const sels = properties.filter(property => filter[property.key])
 
     return (
       <div className="Filter">
         <div className="Panel">
           {properties.map(property => (
             <div
-              className={selected[property.key] ? "Row Selected" : "Row"}
+              className={filter[property.key] ? "Row Selected" : "Row"}
               key={property.key}
               onClick={() => onProperty(property)}
             >
@@ -101,7 +101,7 @@
           <FilterColumn
             key={property.key}
             property={property}
-            selected={selected}
+            filter={filter}
           />
         ))}
       </div>
@@ -109,7 +109,7 @@
   })
 
   const Pack = async.Rendered(
-    () => [ui.getStore().pack, ui.getStore().selected],
+    () => [ui.getStore().pack, ui.getStore().filter],
     selectors.getPackData
   )(({ asyncData }) => {
     const { nodes, pack } = asyncData
@@ -127,15 +127,9 @@
           <div>Global (Admin)</div>
         </div>
 
-        <Filter selected={ui.getStore().selected} />
+        <Filter filter={ui.getStore().filter} />
 
         <div>{indices.count(nodes)} items</div>
-
-        {/* <ul>
-          {items.map((item, i) => (
-            <li key={`item_${i}`}>Item {i}</li>
-          ))}
-        </ul> */}
       </>
     )
   })
