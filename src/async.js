@@ -16,42 +16,43 @@ async = (() => {
     )
   }
 
-  // Singleton cache for function returning Task
-  const once2 = f => {
-    let cache
-
-    return (...args) => {
-      const hash = JSON.stringify(args)
-      if (cache && cache[0] === hash) return cache[1]
-
-      throw lang.Task.toPromise(f(...args)).then(r => {
-        setProgress(null)
-        cache = [hash, r]
-
-        return r
-      })
+  // queue async render tasks to ensure sequential execution
+  const queue = []
+  const dequeue = (res, rej) => {
+    if (queue.length === 0) {
+      setProgress(null)
+      rej()
+      return
     }
+
+    queue[0].fork(rej, () => {
+      queue.shift()
+      dequeue(res, rej)
+    })
   }
 
-  const once = f => {
+  // queue and cache async selectors
+  const memo = f => {
     let cache = {}
 
     return (...args) => {
       const hash = JSON.stringify(args)
       if (cache.hasOwnProperty(hash)) return cache[hash]
 
-      throw lang.Task.toPromise(f(...args)).then(r => {
-        setProgress(null)
-        cache[hash] = r
+      queue.push(f(...args).map(r => (cache[hash] = r)))
 
-        return r
-      })
+      if (queue.length === 1) {
+        throw new Promise(dequeue)
+      } else {
+        throw Promise.resolve()
+      }
     }
   }
 
+  // component with async data
   const ASYNC = Symbol("async-data")
   const Rendered = (selector, fn) => Component => {
-    const gn = once(fn)
+    const gn = memo(fn)
     const wrapped = props =>
       React.createElement(Component, {
         ...props,
