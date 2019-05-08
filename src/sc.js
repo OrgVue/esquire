@@ -16,24 +16,7 @@ sc = (() => {
     )
   }
 
-  // Queue async render tasks to ensure sequential execution
-  const queue = []
-  const dequeue = (res, rej) => {
-    if (queue.length === 0) {
-      progress(null)
-      rej()
-      return
-    }
-
-    const { hash, f, args, cache } = queue[0]
-    f(...args).fork(rej, r => {
-      cache[hash] = r
-      queue.shift()
-      dequeue(res, rej)
-    })
-  }
-
-  // Queue and cache async selectors
+  // Memoize async data selector
   const memo = f => {
     let cache = {}
 
@@ -41,15 +24,13 @@ sc = (() => {
       const hash = JSON.stringify(args)
       if (cache.hasOwnProperty(hash)) return cache[hash]
 
-      if (queue.every(item => item.hash !== hash || item.f !== f)) {
-        queue.push({ hash, f, args, cache })
-      }
+      throw lang.Task.toPromise(
+        f(...args).map(r => {
+          cache[hash] = r
 
-      if (queue.length === 1) {
-        throw new Promise(dequeue)
-      } else {
-        throw Promise.resolve()
-      }
+          return r
+        })
+      )
     }
   }
 
@@ -59,6 +40,8 @@ sc = (() => {
 
     // Transition to new state and store
     const transition = (event, diff) => {
+      // disallow re-entrant transitioning
+
       state = event
       if (typeof diff === "function") {
         store = diff(store)
@@ -69,9 +52,11 @@ sc = (() => {
         }
       }
 
-      render()
+      render().then(() => {
+        progress(null)
 
-      return []
+        return [] // actions
+      })
     }
 
     // Receive message from web worker and invoke relevant handler

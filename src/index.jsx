@@ -1,12 +1,22 @@
-// Set react to concurrent mode
-const cmode = ReactDOM.unstable_createRoot(document.getElementById("app"))
 const render = () => {
-  cmode.render(
-    <React.Suspense fallback={null}>
-      <React.unstable_ConcurrentMode>
-        <components.App state={ui.getState()} />
-      </React.unstable_ConcurrentMode>
-    </React.Suspense>
+  // disallow re-entrant rendering
+
+  const app = <components.App state={ui.getState()} />
+  return reactTreeWalker(app, (element, instance) => {
+    if (!instance && typeof element.type === "function") {
+      try {
+        element.type(element.props)
+      } catch (e) {
+        return e // check promise
+      }
+    }
+  }).then(
+    () => {
+      ReactDOM.render(app, document.getElementById("app"))
+    },
+    err => {
+      console.log("Error", err)
+    }
   )
 }
 
