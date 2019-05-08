@@ -1,7 +1,7 @@
 # TODO
 
-- pinpoint singleton caches (items?)
 - migration path
+- pinpoint singleton caches (items?)
 - get used memory from/for webworker?
 
 # Rationale

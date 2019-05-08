@@ -138,7 +138,7 @@
       ui.getStore().filter
     )
 
-    setTimeout(() => document.getElementById("txtSearch").focus(), 10)
+    setTimeout(() => document.getElementById("txtSearch").focus(), 100)
 
     return (
       <>

@@ -53,285 +53,301 @@ packs = (() => {
     return db
   }
 
-  const CACHE_ENABLED = true
+  const CACHE_ENABLED = false
 
   // Retrieve items by pack id
-  const items = lang.Task.memo(id =>
-    lang.Task.do(function*() {
-      const pack = yield get(id)
+  const items = lang.Task.memo(
+    id =>
+      lang.Task.do(function*() {
+        const pack = yield get(id)
 
-      const db = getDb()
+        const db = getDb()
 
-      const cache = yield lang.Task.fromPromise(
-        db.items
-          .where("id")
-          .equals(id)
-          .first()
-      )
-
-      if (CACHE_ENABLED && cache !== undefined) {
-        return lang.Task.of(cache.data)
-      }
-
-      postMessage({ id: "progress", result: `Loading items` })
-      const reader = yield network.requestStream({
-        headers: {
-          accept: "application/rvdh",
-          "x-accept-encoding": "none"
-        },
-        path: `/GLOBAL/dataset/${pack.dataset.id}/items`
-      })
-
-      const items = yield network.readItems(reader, cnt =>
-        postMessage({ id: "progress", result: `${cnt} items` })
-      )
-
-      if (CACHE_ENABLED) {
-        yield lang.Task.fromPromise(
-          db.items.add({
-            id,
-            data: items
-          })
+        const cache = yield lang.Task.fromPromise(
+          db.items
+            .where("id")
+            .equals(id)
+            .first()
         )
-      }
 
-      return lang.Task.of(items)
-    })
+        if (CACHE_ENABLED && cache !== undefined) {
+          return lang.Task.of(cache.data)
+        }
+
+        postMessage({ id: "progress", result: `Loading items` })
+        const reader = yield network.requestStream({
+          headers: {
+            accept: "application/rvdh",
+            "x-accept-encoding": "none"
+          },
+          path: `/GLOBAL/dataset/${pack.dataset.id}/items`
+        })
+
+        const items = yield network.readItems(reader, cnt =>
+          postMessage({ id: "progress", result: `${cnt} items` })
+        )
+
+        if (CACHE_ENABLED) {
+          yield lang.Task.fromPromise(
+            db.items.add({
+              id,
+              data: items
+            })
+          )
+        }
+
+        return lang.Task.of(items)
+      }),
+    { exclude: [1] }
   )
 
   // Get tree by pack id
-  const tree = lang.Task.memo(id =>
-    lang.Task.do(function*() {
-      postMessage({ id: "progress", result: `Building tree` })
+  const tree = lang.Task.memo(
+    id =>
+      lang.Task.do(function*() {
+        postMessage({ id: "progress", result: `Building tree` })
 
-      const pack = yield get(id)
-      const keyId = pack.metadata.paths[0].id
-      const keyParent = pack.metadata.paths[0].parentId
-      const _nodes = yield items(id)
+        const pack = yield get(id)
+        const keyId = pack.metadata.paths[0].id
+        const keyParent = pack.metadata.paths[0].parentId
+        const _nodes = yield items(id)
 
-      const ref = {
-        children: []
-      }
-
-      ref.lookup = {}
-
-      // read data and index nodes
-      const { data, nodes } = _nodes.reduce(
-        (r, node) => {
-          const item = {
-            id: node.properties[keyId],
-            node: {
-              children: [],
-              node
-            },
-            pid: node.properties[keyParent]
-          }
-          ref.lookup[node.id] = item.node
-
-          r.data.push(item)
-          if (!r.nodes[item.id]) {
-            r.nodes[item.id] = item
-          } // typed hash of id?
-
-          return r
-        },
-        {
-          data: [],
-          nodes: {}
+        const ref = {
+          children: []
         }
-      )
 
-      // set parents
-      return lang.Task.of(
-        data.reduce((r, item) => {
-          if (nodes[item.pid]) {
-            // check parent for cycles
-            let c = nodes[item.pid]
-            while (c && c.id !== item.id) {
-              c = c.parent
-            }
-            if (!c) {
-              item.parent = nodes[item.pid]
-              item.parent.node.children.push(item.node)
-              item.node.parent = item.parent.node
+        ref.lookup = {}
 
-              return r
+        // read data and index nodes
+        const { data, nodes } = _nodes.reduce(
+          (r, node) => {
+            const item = {
+              id: node.properties[keyId],
+              node: {
+                children: [],
+                node
+              },
+              pid: node.properties[keyParent]
             }
+            ref.lookup[node.id] = item.node
+
+            r.data.push(item)
+            if (!r.nodes[item.id]) {
+              r.nodes[item.id] = item
+            } // typed hash of id?
+
+            return r
+          },
+          {
+            data: [],
+            nodes: {}
           }
+        )
 
-          item.parent = {}
-          ref.children.push(item.node)
-          item.node.parent = ref
+        // set parents
+        return lang.Task.of(
+          data.reduce((r, item) => {
+            if (nodes[item.pid]) {
+              // check parent for cycles
+              let c = nodes[item.pid]
+              while (c && c.id !== item.id) {
+                c = c.parent
+              }
+              if (!c) {
+                item.parent = nodes[item.pid]
+                item.parent.node.children.push(item.node)
+                item.node.parent = item.parent.node
 
-          return r
-        }, ref)
-      )
-    })
+                return r
+              }
+            }
+
+            item.parent = {}
+            ref.children.push(item.node)
+            item.node.parent = ref
+
+            return r
+          }, ref)
+        )
+      }),
+    { exclude: [1] }
   )
 
   // Calculate property for given pack id and property key
-  const calcProperty = lang.Task.memo((id, key) =>
-    lang.Task.do(function*() {
-      const nodes = yield items(id)
+  const calcProperty = lang.Task.memo(
+    (id, key) =>
+      lang.Task.do(function*() {
+        const nodes = yield items(id)
 
-      postMessage({ id: "progress", result: `Calculating ${key}` })
-      const ref = yield tree(id)
-      nodes.forEach(node => {
-        let c = ref.lookup[node.id]
+        postMessage({ id: "progress", result: `Calculating ${key}` })
+        const ref = yield tree(id)
+        nodes.forEach(node => {
+          let c = ref.lookup[node.id]
 
-        node.properties[key] = (() => {
-          switch (key) {
-            case "_depth":
-              let depth = 0
-              while (c.parent) {
-                depth += 1
-                c = c.parent
-              }
+          node.properties[key] = (() => {
+            switch (key) {
+              case "_depth":
+                let depth = 0
+                while (c.parent) {
+                  depth += 1
+                  c = c.parent
+                }
 
-              return (" " + depth).substr(-2)
+                return (" " + depth).substr(-2)
 
-            case "_isleaf":
-              return c.children.length === 0 ? "Yes" : "No"
+              case "_isleaf":
+                return c.children.length === 0 ? "Yes" : "No"
 
-            case "_isorphan":
-              return c.children.length === 0 && c.parent === ref ? "Yes" : "No"
+              case "_isorphan":
+                return c.children.length === 0 && c.parent === ref
+                  ? "Yes"
+                  : "No"
 
-            case "_outgoing":
-              return (" " + c.children.length).substr(-2)
-          }
-        })()
-      })
+              case "_outgoing":
+                return (" " + c.children.length).substr(-2)
+            }
+          })()
+        })
 
-      return lang.Task.of()
-    })
+        return lang.Task.of()
+      }),
+    { exclude: [1] }
   )
 
   // Group values for pack id and property key
-  const groups = lang.Task.memo((id, key) =>
-    lang.Task.do(function*() {
-      postMessage({ id: "progress", result: `Grouping ${key}` })
+  const groups = lang.Task.memo(
+    (id, key) =>
+      lang.Task.do(function*() {
+        postMessage({ id: "progress", result: `Grouping ${key}` })
 
-      const props = yield properties(id)
-      const property = props.filter(p => p.key === key)[0]
-      if (property.isCalc) yield calcProperty(id, key)
+        const props = yield properties(id)
+        const property = props.filter(p => p.key === key)[0]
+        if (property.isCalc) yield calcProperty(id, key)
 
-      const nodes = yield items(id)
+        const nodes = yield items(id)
 
-      return lang.Task.of(
-        Object.entries(
-          nodes.reduce((r, node, i) => {
-            let val = node.properties[key]
-            if (val === undefined) val = "zzz(Blank)"
-            if (!r[val]) r[val] = indices.create()
-            indices.set(r[val], i)
+        return lang.Task.of(
+          Object.entries(
+            nodes.reduce((r, node, i) => {
+              let val = node.properties[key]
+              if (val === undefined) val = "zzz(Blank)"
+              if (!r[val]) r[val] = indices.create()
+              indices.set(r[val], i)
 
-            return r
-          }, {})
-        ).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()))
-      )
-    })
+              return r
+            }, {})
+          ).sort((a, b) => a[0].toLowerCase().localeCompare(b[0].toLowerCase()))
+        )
+      }),
+    { exclude: [1] }
   )
 
   // List properties by pack id
-  const properties = lang.Task.memo(id =>
-    lang.Task.do(function*() {
-      const pack = yield get(id)
+  const properties = lang.Task.memo(
+    id =>
+      lang.Task.do(function*() {
+        const pack = yield get(id)
 
-      return lang.Task.of(
-        [
-          {
-            key: "_depth",
-            isCalc: true,
-            metadata: { name: "Depth" }
-          },
-          {
-            key: "_isleaf",
-            isCalc: true,
-            metadata: { name: "Is leaf" }
-          },
-          {
-            key: "_isorphan",
-            isCalc: true,
-            metadata: { name: "Is orphan" }
-          },
-          {
-            key: "_outgoing",
-            isCalc: true,
-            metadata: { name: "Outgoing count" }
-          }
-        ]
-          .concat(pack.dataset.properties)
-          .sort(sortFn)
-      )
-    })
+        return lang.Task.of(
+          [
+            {
+              key: "_depth",
+              isCalc: true,
+              metadata: { name: "Depth" }
+            },
+            {
+              key: "_isleaf",
+              isCalc: true,
+              metadata: { name: "Is leaf" }
+            },
+            {
+              key: "_isorphan",
+              isCalc: true,
+              metadata: { name: "Is orphan" }
+            },
+            {
+              key: "_outgoing",
+              isCalc: true,
+              metadata: { name: "Outgoing count" }
+            }
+          ]
+            .concat(pack.dataset.properties)
+            .sort(sortFn)
+        )
+      }),
+    { exclude: [1] }
   )
 
   // Get the mask of filtered nodes
-  const filteredNodes = lang.Task.memo((id, filter) =>
-    lang.Task.do(function*() {
-      const nodes = yield items(id)
-      let mask = nodes.reduce((r, node, i) => {
-        indices.set(r, i)
-        return r
-      }, indices.create())
+  const filteredNodes = lang.Task.memo(
+    (id, filter) =>
+      lang.Task.do(function*() {
+        const nodes = yield items(id)
+        let mask = nodes.reduce((r, node, i) => {
+          indices.set(r, i)
+          return r
+        }, indices.create())
 
-      for (const key in filter) {
-        if (Object.entries(filter[key]).length === 0) continue
+        for (const key in filter) {
+          if (Object.entries(filter[key]).length === 0) continue
 
-        const grps = yield groups(id, key)
-        const sum = grps.reduce((r, [name, nodes]) => {
-          if (!filter[key][name]) return r
+          const grps = yield groups(id, key)
+          const sum = grps.reduce((r, [name, nodes]) => {
+            if (!filter[key][name]) return r
 
-          return indices.union(r, nodes)
-        }, undefined)
+            return indices.union(r, nodes)
+          }, undefined)
 
-        if (sum !== undefined) {
-          // can this happen?
-          mask = indices.intersect(mask, sum)
+          if (sum !== undefined) {
+            // can this happen?
+            mask = indices.intersect(mask, sum)
+          }
         }
-      }
 
-      return lang.Task.of(mask)
-    })
+        return lang.Task.of(mask)
+      }),
+    { exclude: [1] }
   )
 
   // List bucket with filtered nodes for pack id, property key and filter state
-  const buckets = lang.Task.memo((id, key, filter) =>
-    lang.Task.do(function*() {
-      const nodes = yield items(id)
-      let mask = nodes.reduce((r, node, i) => {
-        indices.set(r, i)
-        return r
-      }, indices.create())
+  const buckets = lang.Task.memo(
+    (id, key, filter) =>
+      lang.Task.do(function*() {
+        const nodes = yield items(id)
+        let mask = nodes.reduce((r, node, i) => {
+          indices.set(r, i)
+          return r
+        }, indices.create())
 
-      postMessage({ id: "progress", result: `Bucketing ${key}` })
+        postMessage({ id: "progress", result: `Bucketing ${key}` })
 
-      // filter except self
-      for (const k in filter) {
-        if (k === key || Object.entries(filter[k]).length === 0) continue
+        // filter except self
+        for (const k in filter) {
+          if (k === key || Object.entries(filter[k]).length === 0) continue
 
-        const grps = yield groups(id, k)
-        const sum = grps.reduce((r, [name, nodes]) => {
-          if (!filter[k][name]) return r
+          const grps = yield groups(id, k)
+          const sum = grps.reduce((r, [name, nodes]) => {
+            if (!filter[k][name]) return r
 
-          return indices.union(r, nodes)
-        }, undefined)
-        if (sum !== undefined) {
-          // can this happen?
-          mask = indices.intersect(mask, sum)
+            return indices.union(r, nodes)
+          }, undefined)
+          if (sum !== undefined) {
+            // can this happen?
+            mask = indices.intersect(mask, sum)
+          }
         }
-      }
 
-      const grps = yield groups(id, key)
+        const grps = yield groups(id, key)
 
-      const result = grps.map(([val, nodes]) => ({
-        name: String(val),
-        nodes: indices.intersect(mask, nodes),
-        selected: filter[key][val]
-      }))
+        const result = grps.map(([val, nodes]) => ({
+          name: String(val),
+          nodes: indices.intersect(mask, nodes),
+          selected: filter[key][val]
+        }))
 
-      return lang.Task.of(result)
-    })
+        return lang.Task.of(result)
+      }),
+    { exclude: [1] }
   )
 
   // Export

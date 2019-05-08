@@ -27,16 +27,25 @@ lang = (() => {
 
   Task.is = x => x && typeof x.fork === "function"
 
-  Task.memo = fn => {
+  Task.memo = (fn, options) => {
+    const o = {
+      exclude: [],
+      ...options
+    }
+
     const cache = {}
 
     return (...args) =>
       Task((rej, res) => {
-        const hash = JSON.stringify(args)
-        if (cache.hasOwnProperty(hash)) return res(cache[hash])
+        const hash = JSON.stringify(args.filter((arg, i) => !o.exclude[i]))
+        const checksum = JSON.stringify(args)
+
+        if (cache.hasOwnProperty(hash) && cache[hash][0] === checksum) {
+          return res(cache[hash][1])
+        }
 
         fn(...args).fork(rej, r => {
-          cache[hash] = r
+          cache[hash] = [checksum, r]
           res(r)
         })
       })
