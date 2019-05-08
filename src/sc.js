@@ -39,9 +39,11 @@ sc = (() => {
     let store = {}
 
     // Transition to new state and store
+    let lock = false
     const transition = (event, diff) => {
       // disallow re-entrant transitioning
-      // console.log("start transition")
+      if (lock) throw new Error("Can't transition within transition")
+      lock = true
 
       state = event
       if (typeof diff === "function") {
@@ -56,7 +58,7 @@ sc = (() => {
       render().then(() => {
         progress(null)
 
-        // console.log("end transition")
+        lock = false
         return [] // actions
       })
     }

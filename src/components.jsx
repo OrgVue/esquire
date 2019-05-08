@@ -186,7 +186,7 @@
   }
 
   // Handle click on homescreen
-  const onHome = () => ui.transition("homescreen")
+  const onHome = () => ui.transition("homescreen", { searchResult: [] })
 
   // Display the app
   const App = ({ state }) =>
