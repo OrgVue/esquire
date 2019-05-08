@@ -1,9 +1,10 @@
 # TODO
 
+- render to return Task
 - implement search
 - pinpoint singleton caches (items?)
 - migration path
-- react-tree-walker to get around concurrent timeout
+- get used memory from/for webworker?
 
 # Rationale
 
@@ -32,3 +33,9 @@ const Pack = Async(
 ```
 
 Here `Async` does the memoization. The advantage is that the resulting wrapped component could be inspected for async data (i.e. `getPack` returning a `Task`) without calling the render function. On the other hand, the render function needs to be called anyway to discover async data of children.
+
+## Async rendering
+
+- sequential exec promises
+- not know when done
+- 250ms/500ms limit

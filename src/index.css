@@ -70,6 +70,10 @@ body {
   padding: 4px 32px 8px 32px;
 }
 
+.Search {
+  padding: 8px;
+}
+
 .Toolbar {
   align-items: center;
   background-color: #fff;

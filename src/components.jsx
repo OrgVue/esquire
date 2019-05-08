@@ -121,11 +121,24 @@
   }
 
   // Display a pack
+  const onSearch = search => {
+    if (!ui.getStore().search) {
+      ui.transition("pack", { search, searchResult: [] })
+      ui.post("search", ["start", ui.getStore().pack, search]).fork(
+        console.log,
+        () => {
+          ui.transition("pack", { search: "" })
+        }
+      )
+    }
+  }
   const Pack = () => {
     const { nodes, pack } = selectors.getPackData(
       ui.getStore().pack,
       ui.getStore().filter
     )
+
+    setTimeout(() => document.getElementById("txtSearch").focus(), 10)
 
     return (
       <>
@@ -142,7 +155,32 @@
 
         <Filter filter={ui.getStore().filter} />
 
-        <div>{indices.count(nodes)} items</div>
+        <div className="Search">
+          <div>Search {indices.count(nodes)} items</div>
+          <div>
+            <input
+              id="txtSearch"
+              onKeyUp={e =>
+                e.keyCode === 13 &&
+                onSearch(document.getElementById("txtSearch").value)
+              }
+              type="text"
+            />
+            <button
+              onClick={e =>
+                onSearch(document.getElementById("txtSearch").value)
+              }
+              disabled={!!ui.getStore().search}
+            >
+              Go
+            </button>
+          </div>
+          <div>
+            {ui.getStore().searchResult.map(line => (
+              <div key={Math.random()}>{line}</div>
+            ))}
+          </div>
+        </div>
       </>
     )
   }

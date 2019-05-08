@@ -41,6 +41,7 @@ sc = (() => {
     // Transition to new state and store
     const transition = (event, diff) => {
       // disallow re-entrant transitioning
+      // console.log("start transition")
 
       state = event
       if (typeof diff === "function") {
@@ -55,14 +56,21 @@ sc = (() => {
       render().then(() => {
         progress(null)
 
+        // console.log("end transition")
         return [] // actions
       })
     }
 
     // Receive message from web worker and invoke relevant handler
     const handlers = {
-      progress
+      progress,
+      search: result =>
+        ui.transition("pack", store => ({
+          ...store,
+          searchResult: store.searchResult.concat([result])
+        }))
     }
+
     worker.onmessage = event => {
       const { id, result } = event.data
       handlers[id](result)

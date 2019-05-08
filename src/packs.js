@@ -53,7 +53,7 @@ packs = (() => {
     return db
   }
 
-  const CACHE_ENABLED = false
+  const CACHE_ENABLED = true
 
   // Retrieve items by pack id
   const items = lang.Task.memo(id =>
@@ -73,6 +73,7 @@ packs = (() => {
         return lang.Task.of(cache.data)
       }
 
+      postMessage({ id: "progress", result: `Loading items` })
       const reader = yield network.requestStream({
         headers: {
           accept: "application/rvdh",
@@ -238,7 +239,11 @@ packs = (() => {
 
       return lang.Task.of(
         [
-          { key: "_depth", isCalc: true, metadata: { name: "Depth" } },
+          {
+            key: "_depth",
+            isCalc: true,
+            metadata: { name: "Depth" }
+          },
           {
             key: "_isleaf",
             isCalc: true,
