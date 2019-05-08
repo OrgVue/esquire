@@ -174,26 +174,32 @@ packs = (() => {
       const nodes = yield items(id)
 
       postMessage({ id: "progress", result: `Calculating ${key}` })
-      if (key === "_depth") {
-        const ref = yield tree(id)
-        nodes.forEach(node => {
-          let depth = 0
-          let c = ref.lookup[node.id]
-          while (c.parent) {
-            depth += 1
-            c = c.parent
+      const ref = yield tree(id)
+      nodes.forEach(node => {
+        let c = ref.lookup[node.id]
+
+        node.properties[key] = (() => {
+          switch (key) {
+            case "_depth":
+              let depth = 0
+              while (c.parent) {
+                depth += 1
+                c = c.parent
+              }
+
+              return (" " + depth).substr(-2)
+
+            case "_isleaf":
+              return c.children.length === 0 ? "Yes" : "No"
+
+            case "_isorphan":
+              return c.children.length === 0 && c.parent === ref ? "Yes" : "No"
+
+            case "_outgoing":
+              return (" " + c.children.length).substr(-2)
           }
-
-          node.properties[key] = (" " + depth).substr(-2)
-        })
-      } else if (key === "_outgoing") {
-        const ref = yield tree(id)
-        nodes.forEach(node => {
-          let c = ref.lookup[node.id]
-
-          node.properties[key] = (" " + c.children.length).substr(-2)
-        })
-      }
+        })()
+      })
 
       return lang.Task.of()
     })
@@ -233,6 +239,16 @@ packs = (() => {
       return lang.Task.of(
         [
           { key: "_depth", isCalc: true, metadata: { name: "Depth" } },
+          {
+            key: "_isleaf",
+            isCalc: true,
+            metadata: { name: "Is leaf" }
+          },
+          {
+            key: "_isorphan",
+            isCalc: true,
+            metadata: { name: "Is orphan" }
+          },
           {
             key: "_outgoing",
             isCalc: true,
