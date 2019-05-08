@@ -1,2 +1,2 @@
-- build data first, then components, then display tree?
 - pinpoint singleton caches (items?)
+- react-tree-walker to get around concurrent timeout

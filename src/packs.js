@@ -53,6 +53,8 @@ packs = (() => {
     return db
   }
 
+  const CACHE_ENABLED = false
+
   // Retrieve items by pack id
   const items = lang.Task.memo(id =>
     lang.Task.do(function*() {
@@ -67,7 +69,7 @@ packs = (() => {
           .first()
       )
 
-      if (cache !== undefined) {
+      if (CACHE_ENABLED && cache !== undefined) {
         return lang.Task.of(cache.data)
       }
 
@@ -83,12 +85,14 @@ packs = (() => {
         postMessage({ id: "progress", result: `${cnt} items` })
       )
 
-      yield lang.Task.fromPromise(
-        db.items.add({
-          id,
-          data: items
-        })
-      )
+      if (CACHE_ENABLED) {
+        yield lang.Task.fromPromise(
+          db.items.add({
+            id,
+            data: items
+          })
+        )
+      }
 
       return lang.Task.of(items)
     })

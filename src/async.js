@@ -53,23 +53,9 @@ async = (() => {
     }
   }
 
-  // Component with async data selector
-  const ASYNC = Symbol("async-data")
-  const Rendered = (selector, fn) => Component => {
-    const gn = memo(fn)
-    const wrapped = props =>
-      React.createElement(Component, {
-        ...props,
-        asyncData: wrapped[ASYNC](props)
-      })
-    wrapped[ASYNC] = props => gn(...selector(props))
-
-    return wrapped
-  }
-
   // Export
   return {
-    Rendered,
+    memo,
     setProgress
   }
 })()

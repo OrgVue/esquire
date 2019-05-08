@@ -1,8 +1,10 @@
 ;(() => {
   // Display the packs
   const onPack = id => ui.transition("pack", { pack: id })
-  const Packs = async.Rendered(({}) => [], selectors.listPacks)(
-    ({ asyncData }) => (
+  const Packs = () => {
+    const packs = selectors.listPacks()
+
+    return (
       <>
         <div className="Toolbar">
           <div className="Logo">
@@ -12,7 +14,7 @@
           <div>Global (Admin)</div>
         </div>
         <div className="Packs">
-          {asyncData.map(pack => (
+          {packs.map(pack => (
             <div className="Pack" key={pack.id} onClick={() => onPack(pack.id)}>
               {pack.dataset.metadata.name}
               <br />
@@ -24,7 +26,7 @@
         </div>
       </>
     )
-  )
+  }
 
   // Handle click on property in filter
   const onProperty = property =>
@@ -62,30 +64,32 @@
     })
 
   // Display list of buckets in filter
-  const FilterColumn = async.Rendered(
-    ({ property, filter }) => [ui.getStore().pack, property.key, filter],
-    selectors.getBuckets
-  )(({ asyncData: buckets, property }) => (
-    <div className="Panel">
-      {buckets.slice(0, 2000).map(bucket => (
-        <div
-          key={bucket.name}
-          className={bucket.selected ? "Row Selected" : "Row"}
-          onClick={() => onBucket(property, bucket)}
-        >
-          <div>{bucket.name.replace("zzz", "")}</div>
-          <div>{indices.count(bucket.nodes)}</div>
-        </div>
-      ))}
-    </div>
-  ))
+  const FilterColumn = ({ filter, property }) => {
+    const buckets = selectors.getBuckets(
+      ui.getStore().pack,
+      property.key,
+      filter
+    )
+
+    return (
+      <div className="Panel">
+        {buckets.slice(0, 2000).map(bucket => (
+          <div
+            key={bucket.name}
+            className={bucket.selected ? "Row Selected" : "Row"}
+            onClick={() => onBucket(property, bucket)}
+          >
+            <div>{bucket.name.replace("zzz", "")}</div>
+            <div>{indices.count(bucket.nodes)}</div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   // Display filter
-  const Filter = async.Rendered(
-    () => [ui.getStore().pack],
-    selectors.getFilterData
-  )(({ asyncData, filter }) => {
-    const { properties } = asyncData
+  const Filter = ({ filter }) => {
+    const { properties } = selectors.getFilterData(ui.getStore().pack)
     const sels = properties.filter(property => filter[property.key])
 
     return (
@@ -114,14 +118,14 @@
         ))}
       </div>
     )
-  })
+  }
 
   // Display a pack
-  const Pack = async.Rendered(
-    () => [ui.getStore().pack, ui.getStore().filter],
-    selectors.getPackData
-  )(({ asyncData }) => {
-    const { nodes, pack } = asyncData
+  const Pack = () => {
+    const { nodes, pack } = selectors.getPackData(
+      ui.getStore().pack,
+      ui.getStore().filter
+    )
 
     return (
       <>
@@ -141,7 +145,7 @@
         <div>{indices.count(nodes)} items</div>
       </>
     )
-  })
+  }
 
   // Handle click on homescreen
   const onHome = () => ui.transition("homescreen")
