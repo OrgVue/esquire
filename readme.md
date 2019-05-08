@@ -1,3 +1,4 @@
-- pinpoint singleton caches (items?)
+- how to determine when rendering is done, for side effects. -> Avoid render within render
 - implement search
+- pinpoint singleton caches (items?)
 - react-tree-walker to get around concurrent timeout

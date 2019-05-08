@@ -12,7 +12,7 @@ const render = () => {
 
 // Start web worker
 const worker = new Worker("src/worker.js")
-window.ui = sc.UIController(render, worker, async.setProgress)
+window.ui = sc.UIController(render, worker)
 
 // Authenticate
 fetch("/tenants/authenticator", {
