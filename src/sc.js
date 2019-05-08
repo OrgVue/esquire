@@ -55,12 +55,14 @@ sc = (() => {
         }
       }
 
-      render().then(() => {
-        progress(null)
+      render(state)
+        .map(() => {
+          progress(null)
 
-        lock = false
-        return [] // actions
-      })
+          lock = false
+          return [] // actions
+        })
+        .fork(console.log, () => {})
     }
 
     // Receive message from web worker and invoke relevant handler
