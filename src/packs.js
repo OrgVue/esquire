@@ -1,3 +1,5 @@
+const CACHE_ENABLED = true
+
 const sortFn = (a, b) =>
   a.metadata.name.toLowerCase().localeCompare(b.metadata.name.toLowerCase())
 
@@ -52,8 +54,6 @@ packs = (() => {
 
     return db
   }
-
-  const CACHE_ENABLED = true
 
   // Retrieve items by pack id
   const items = lang.Task.memo(

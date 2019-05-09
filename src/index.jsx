@@ -18,7 +18,16 @@ const render = state =>
   })
 
 // Start web worker
-const worker = new Worker("src/worker.js")
+let worker
+if (!WORKER_DISABLED) {
+  worker = new Worker("src/worker.js")
+} else {
+  window.postMessage = data => worker.onmessage({ data })
+  worker = {
+    postMessage: data => window.onmessage({ data })
+  }
+}
+
 window.ui = sc.UIController(render, worker)
 
 // Authenticate

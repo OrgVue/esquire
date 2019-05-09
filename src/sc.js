@@ -48,10 +48,16 @@ sc = (() => {
     let store = {}
 
     // Transition to new state and store
+    const queue = []
     let lock = false
     const transition = (event, diff) => {
-      // disallow re-entrant transitioning
-      if (lock) throw new Error("Can't transition within transition")
+      // disallow re-entrant transitioning, except when there isn't a worker
+      if (lock) {
+        console.log("queued", event, diff)
+        queue.push([event, diff])
+
+        return
+      }
       lock = true
 
       state = event
@@ -69,6 +75,10 @@ sc = (() => {
           progress(null)
 
           lock = false
+          if (queue.length) {
+            transition(...queue.shift())
+          }
+
           return [] // actions
         })
         .fork(console.log, () => {})

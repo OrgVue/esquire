@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>async react rendering</title>
+    <title>esquire</title>
     <meta charset="utf-8" />
 
     <script src="lib/react.development.js"></script>
@@ -10,6 +10,24 @@
 
     <script src="src/lang.js"></script>
     <script src="src/indices.js"></script>
+    <script>
+      WORKER_DISABLED = false
+    </script>
+  
+    <!-- commented out === worker enabled -->
+    <!-- <script>
+      WORKER_DISABLED = true
+      if (WORKER_DISABLED) {
+        window.importScripts = () => {}
+      } 
+    </script>
+    <script src="lib/dexie.js"></script>
+    <script src="src/network.js"></script>
+    <script src="src/packs.js"></script>
+    <script src="src/search.js"></script>
+    <script src="src/worker.js"></script> -->
+    <!-- till here-->
+
     <script src="src/sc.js"></script>
     <script src="src/selectors.js"></script>
     <script src="src/components.jsx" type="text/babel"></script>

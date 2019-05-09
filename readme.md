@@ -1,6 +1,5 @@
 # TODO
 
-- try without webworker
 - refactor memos
 - find examples of complex desktop apps, are they all sync?
 - migration path
