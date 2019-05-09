@@ -3,8 +3,6 @@
 - find examples of complex desktop apps, are they all sync?
   - [spotify desktop app](https://www.quora.com/How-did-Spotify-make-a-multiplatform-lightweight-well-designed-desktop-application-What-is-the-technology-behind-it)
 - estimate lines of code eliminated
-- try reporting?
-- get used memory from/for webworker?
 
 # Rationale
 

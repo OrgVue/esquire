@@ -2,6 +2,7 @@
   // Display the packs
   const onPack = id => ui.transition("pack", { pack: id })
   const Packs = () => {
+    console.log("render Packs") // multipe of these on back to homescreen?
     const packs = selectors.listPacks()
 
     return (
@@ -171,7 +172,11 @@
       ui.getStore().filter
     )
 
-    setTimeout(() => document.getElementById("txtSearch").focus(), 1000)
+    setTimeout(() => {
+      if (document.getElementById("txtSearch")) {
+        document.getElementById("txtSearch").focus()
+      }
+    }, 500)
 
     return (
       <>
@@ -225,7 +230,11 @@
   }
 
   // Handle click on homescreen
-  const onHome = () => ui.transition("homescreen", { searchResult: [] })
+  const onHome = () => {
+    // ui.post("search", ["clearCache"]).fork(console.log, () => {})
+    // lang.Cache.clear()
+    ui.transition("homescreen", { searchResult: [] })
+  }
 
   // Display the app
   const App = ({ state }) =>

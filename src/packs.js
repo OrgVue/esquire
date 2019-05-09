@@ -45,14 +45,12 @@ packs = (() => {
     })
 
   // Get the indexedDB db
-  const getDb = () => {
-    const db = new Dexie("esquire")
-
+  let db
+  if (CACHE_ENABLED) {
+    db = new Dexie("esquire")
     db.version(1).stores({
       items: "id"
     })
-
-    return db
   }
 
   // Retrieve items by pack id
@@ -61,17 +59,17 @@ packs = (() => {
       lang.Task.do(function*() {
         const pack = yield get(id)
 
-        const db = getDb()
+        if (CACHE_ENABLED) {
+          const cache = yield lang.Task.fromPromise(
+            db.items
+              .where("id")
+              .equals(id)
+              .first()
+          )
 
-        const cache = yield lang.Task.fromPromise(
-          db.items
-            .where("id")
-            .equals(id)
-            .first()
-        )
-
-        if (CACHE_ENABLED && cache !== undefined) {
-          return lang.Task.of(cache.data)
+          if (cache != undefined) {
+            return lang.Task.of(cache.data)
+          }
         }
 
         postMessage({ id: "progress", result: `Loading items` })

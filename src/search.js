@@ -39,5 +39,11 @@ search = (() => {
       return lang.Task.of()
     })
 
-  return { start }
+  const clearCache = () =>
+    lang.Task((rej, res) => {
+      lang.Cache.clear()
+      res()
+    })
+
+  return { start, clearCache }
 })()

@@ -5,23 +5,31 @@ lang = (() => {
       ...options
     }
 
-    const cache = {}
+    const id = Math.random()
+    Cache[id] = {}
 
     return args => {
       const hash = JSON.stringify(args.filter((arg, i) => !o.exclude[i]))
       const checksum = JSON.stringify(args)
 
       return {
-        has: () => cache.hasOwnProperty(hash) && cache[hash][0] === checksum,
-        get: () => cache[hash][1],
+        has: () =>
+          Cache[id].hasOwnProperty(hash) && Cache[id][hash][0] === checksum,
+        get: () => Cache[id][hash][1],
         set: r => {
-          cache[hash] = [checksum, r]
+          Cache[id][hash] = [checksum, r]
 
           return r
         }
       }
     }
   }
+  Cache.clear = () =>
+    Object.keys(Cache).forEach(key => {
+      if (key !== "clear") {
+        Cache[key] = {}
+      }
+    })
 
   // Task e a
   const Task = fork => ({
