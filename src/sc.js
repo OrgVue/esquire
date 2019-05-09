@@ -18,28 +18,16 @@ sc = (() => {
 
   // Memoize async data selector
   const memo = (f, options) => {
-    const o = {
-      exclude: [],
-      ...options
-    }
-
-    const cache = {}
+    const cache = lang.Cache(options)
 
     return (...args) => {
-      const hash = JSON.stringify(args.filter((arg, i) => !o.exclude[i]))
-      const checksum = JSON.stringify(args)
+      const t = cache(args)
 
-      if (cache.hasOwnProperty(hash) && cache[hash][0] === checksum) {
-        return cache[hash][1]
+      if (t.has()) {
+        return t.get()
       }
 
-      throw lang.Task.toPromise(
-        f(...args).map(r => {
-          cache[hash] = [checksum, r]
-
-          return r
-        })
-      )
+      throw lang.Task.toPromise(f(...args).map(r => t.set(r)))
     }
   }
 

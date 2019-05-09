@@ -1,4 +1,28 @@
 lang = (() => {
+  const Cache = options => {
+    const o = {
+      exclude: [],
+      ...options
+    }
+
+    const cache = {}
+
+    return args => {
+      const hash = JSON.stringify(args.filter((arg, i) => !o.exclude[i]))
+      const checksum = JSON.stringify(args)
+
+      return {
+        has: () => cache.hasOwnProperty(hash) && cache[hash][0] === checksum,
+        get: () => cache[hash][1],
+        set: r => {
+          cache[hash] = [checksum, r]
+
+          return r
+        }
+      }
+    }
+  }
+
   // Task e a
   const Task = fork => ({
     fork,
@@ -28,25 +52,17 @@ lang = (() => {
   Task.is = x => x && typeof x.fork === "function"
 
   Task.memo = (fn, options) => {
-    const o = {
-      exclude: [],
-      ...options
-    }
-
-    const cache = {}
+    const cache = Cache(options)
 
     return (...args) =>
       Task((rej, res) => {
-        const hash = JSON.stringify(args.filter((arg, i) => !o.exclude[i]))
-        const checksum = JSON.stringify(args)
-
-        if (cache.hasOwnProperty(hash) && cache[hash][0] === checksum) {
-          return res(cache[hash][1])
+        const t = cache(args)
+        if (t.has()) {
+          return res(t.get())
         }
 
         fn(...args).fork(rej, r => {
-          cache[hash] = [checksum, r]
-          res(r)
+          res(t.set(r))
         })
       })
   }
@@ -59,6 +75,7 @@ lang = (() => {
   const wordCase = s => `${s[0].toUpperCase()}${s.substr(1).toLowerCase()}`
 
   return {
+    Cache,
     Task,
     wordCase
   }

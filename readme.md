@@ -1,6 +1,5 @@
 # TODO
 
-- refactor memos
 - find examples of complex desktop apps, are they all sync?
 - migration path
 - estimate lines of code eliminated
