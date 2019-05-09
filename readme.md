@@ -1,10 +1,9 @@
 # TODO
 
 - find examples of complex desktop apps, are they all sync?
-- migration path
+  - [spotify desktop app](https://www.quora.com/How-did-Spotify-make-a-multiplatform-lightweight-well-designed-desktop-application-What-is-the-technology-behind-it)
 - estimate lines of code eliminated
 - try reporting?
-- pinpoint singleton caches (items?)
 - get used memory from/for webworker?
 
 # Rationale
