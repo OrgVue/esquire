@@ -32,6 +32,27 @@ body {
   background: #bdf;
 }
 
+.Grid {
+  /* height: 500px; */
+  /* overflow: scroll; */
+}
+
+.Grid .Row {
+  display: flex;
+}
+
+.Grid .Row div {
+  overflow-x: hidden;
+  padding: 2px 4px;
+  white-space: nowrap;
+  width: 150px;
+}
+
+.Main {
+  display: flex;
+  flex-direction: column;
+}
+
 .Packs {
   display: flex;
   flex-wrap: wrap;
@@ -71,7 +92,13 @@ body {
 }
 
 .Search {
+  height: 300px;
   padding: 8px;
+}
+
+.Search .Result {
+  height: 250px;
+  overflow-y: scroll;
 }
 
 .Toolbar {
@@ -92,4 +119,9 @@ body {
 
 .Toolbar .Title {
   font-size: 16px;
+}
+
+.Top {
+  display: flex;
+  height: 300px;
 }

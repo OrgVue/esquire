@@ -61,6 +61,13 @@ indices = (() => {
     raw.set(word, (raw.get(word) || 0) | mask)
   }
 
+  const test = (raw, index) => {
+    const word = (index / 32) | 0
+    const mask = 1 << index % 32
+
+    return (raw.get(word) & mask) === mask
+  }
+
   const unionMany = iter => {
     const acc = create()
 
@@ -89,6 +96,7 @@ indices = (() => {
     count,
     intersect,
     set,
+    test,
     union
   }
 })()

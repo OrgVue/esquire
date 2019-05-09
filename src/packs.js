@@ -53,7 +53,7 @@ packs = (() => {
     return db
   }
 
-  const CACHE_ENABLED = false
+  const CACHE_ENABLED = true
 
   // Retrieve items by pack id
   const items = lang.Task.memo(
@@ -86,6 +86,10 @@ packs = (() => {
         const items = yield network.readItems(reader, cnt =>
           postMessage({ id: "progress", result: `${cnt} items` })
         )
+
+        items.forEach((item, i) => {
+          item.index = i
+        })
 
         if (CACHE_ENABLED) {
           yield lang.Task.fromPromise(
@@ -309,6 +313,37 @@ packs = (() => {
     { exclude: [1] }
   )
 
+  // Get filtered nodes with first N properties to certain depth
+  const getPartialNodes = lang.Task.memo((id, filter) =>
+    lang.Task.do(function*() {
+      const pack = yield get(id)
+      const props = yield properties(id)
+      const ref = yield tree(id)
+      const mask = yield filteredNodes(id, filter)
+
+      const result = []
+      const list = ref.children.map(c => [1, c])
+      while (list.length) {
+        const [d, n] = list.pop()
+        result.push({
+          id: n.node.id,
+          indent: d,
+          isGhost: mask !== undefined && !indices.test(mask, n.node.index),
+          label: n.node.properties[pack.metadata.titleField],
+          values: props
+            .slice(0, 10)
+            .map(property => n.node.properties[property.key])
+        })
+
+        if (d < 3) {
+          list.push(...n.children.map(c => [d + 1, c]).reverse())
+        }
+      }
+
+      return lang.Task.of(result)
+    })
+  )
+
   // List bucket with filtered nodes for pack id, property key and filter state
   const buckets = lang.Task.memo(
     (id, key, filter) =>
@@ -354,6 +389,7 @@ packs = (() => {
   return {
     buckets,
     filteredNodes,
+    getPartialNodes,
     items,
     get,
     list,

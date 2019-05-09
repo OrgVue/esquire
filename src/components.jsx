@@ -132,6 +132,39 @@
       )
     }
   }
+
+  // Grid
+  const Grid = () => {
+    const { nodes } = selectors.getGridData(
+      ui.getStore().pack,
+      ui.getStore().filter
+    )
+
+    return (
+      <div className="Grid">
+        {nodes.map(node => (
+          <div
+            key={node.id}
+            className="Row"
+            style={{ opacity: node.isGhost ? 0.5 : 1 }}
+          >
+            <div>
+              <b>
+                {[..." ".repeat(node.indent)].map((s, i) => (
+                  <span key={i}>&nbsp;</span>
+                ))}
+                {node.label}
+              </b>
+            </div>
+            {node.values.map((val, i) => (
+              <div key={i}>{val === null ? "(Blank)" : val}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   const Pack = () => {
     const { nodes, pack } = selectors.getPackData(
       ui.getStore().pack,
@@ -153,33 +186,39 @@
           <div>Global (Admin)</div>
         </div>
 
-        <Filter filter={ui.getStore().filter} />
+        <div className="Main">
+          <div className="Top">
+            <Filter filter={ui.getStore().filter} />
 
-        <div className="Search">
-          <div>Search {indices.count(nodes)} items</div>
-          <div>
-            <input
-              id="txtSearch"
-              onKeyUp={e =>
-                e.keyCode === 13 &&
-                onSearch(document.getElementById("txtSearch").value)
-              }
-              type="text"
-            />
-            <button
-              onClick={e =>
-                onSearch(document.getElementById("txtSearch").value)
-              }
-              disabled={!!ui.getStore().search}
-            >
-              Go
-            </button>
+            <div className="Search">
+              <div>Search {indices.count(nodes)} items</div>
+              <div>
+                <input
+                  id="txtSearch"
+                  onKeyUp={e =>
+                    e.keyCode === 13 &&
+                    onSearch(document.getElementById("txtSearch").value)
+                  }
+                  type="text"
+                />
+                <button
+                  onClick={e =>
+                    onSearch(document.getElementById("txtSearch").value)
+                  }
+                  disabled={!!ui.getStore().search}
+                >
+                  Go
+                </button>
+              </div>
+              <div className="Result">
+                {ui.getStore().searchResult.map(line => (
+                  <div key={Math.random()}>{line}</div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div>
-            {ui.getStore().searchResult.map(line => (
-              <div key={Math.random()}>{line}</div>
-            ))}
-          </div>
+
+          <Grid />
         </div>
       </>
     )

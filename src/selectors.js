@@ -21,6 +21,16 @@ selectors = (() => {
     { exclude: [1] }
   )
 
+  const getGridData = sc.memo(
+    (id, filter) =>
+      lang.Task.do(function*() {
+        const nodes = yield ui.post("packs", ["getPartialNodes", id, filter])
+
+        return lang.Task.of({ nodes })
+      }),
+    { exclude: [1] }
+  )
+
   const getPackData = sc.memo(
     (id, filter) =>
       lang.Task.do(function*() {
@@ -39,6 +49,7 @@ selectors = (() => {
   return {
     getBuckets,
     getFilterData,
+    getGridData,
     getPackData,
     listPacks
   }
