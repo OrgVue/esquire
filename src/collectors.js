@@ -1,4 +1,4 @@
-selectors = (() => {
+collectors = (() => {
   const listPacks = sc.memo(() => ui.post("packs", ["list"]))
 
   const getBuckets = sc.memo(

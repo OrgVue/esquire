@@ -2,8 +2,7 @@
   // Display the packs
   const onPack = id => ui.transition("pack", { pack: id })
   const Packs = () => {
-    console.log("render Packs") // multipe of these on back to homescreen?
-    const packs = selectors.listPacks()
+    const packs = collectors.listPacks()
 
     return (
       <>
@@ -66,7 +65,7 @@
 
   // Display list of buckets in filter
   const FilterColumn = ({ filter, property }) => {
-    const buckets = selectors.getBuckets(
+    const buckets = collectors.getBuckets(
       ui.getStore().pack,
       property.key,
       filter
@@ -90,7 +89,7 @@
 
   // Display filter
   const Filter = ({ filter }) => {
-    const { properties } = selectors.getFilterData(ui.getStore().pack)
+    const { properties } = collectors.getFilterData(ui.getStore().pack)
     const sels = properties.filter(property => filter[property.key])
 
     return (
@@ -136,7 +135,7 @@
 
   // Grid
   const Grid = () => {
-    const { nodes } = selectors.getGridData(
+    const { nodes } = collectors.getGridData(
       ui.getStore().pack,
       ui.getStore().filter
     )
@@ -167,7 +166,7 @@
   }
 
   const Pack = () => {
-    const { nodes, pack } = selectors.getPackData(
+    const { nodes, pack } = collectors.getPackData(
       ui.getStore().pack,
       ui.getStore().filter
     )

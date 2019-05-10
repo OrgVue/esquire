@@ -1,23 +1,28 @@
-# TODO
-
-- estimate lines of code eliminated
-
 # Rationale
 
 ## Current issues
 
 1. Data calculation is chunked because JavaScript is single treaded, hence the resulting code is more complicated and slower.
 2. Data retrieval is duplicated because rendering is sync. The data is prepared and cached or stored in various ways. When rendering data is taken from cache or Store.
-3. The data preperation steps are not on demand leading to a lot of accidental state.
+3. The data preperation steps are not on demand leading to a lot of accidental state and logic.
 4. UI and data are coupled through transitions due to having preperation steps.
 
 ## Target architecture
 
 ![diagram](diagram.png)
 
-From top to bottom, we have **Store** (essential state) and **statecharts** (accidental logic) dictating what is displayed. The resulting **component tree** drives data requirement by calling the relevant **collector** functions. **Buffer** maps between async when walking the tree, and sync when rendering. **Emitter** sends updates to the data layer.
+From top to bottom, we have **Store** (essential state) and **statecharts** (accidental logic) dictating what is displayed. The resulting **component tree** drives data requirements by calling the relevant **collector** functions. **Buffer** maps between async when walking the tree, and sync when rendering. **Emitter** sends updates to the data layer.
 
-Both **collector** and **emitter** use the **message bus** to communicate with the data layer. **Packs**, **Data** and **Search** are examples of data services, they might have dependencies. Data services could have caching to avoid repeated requests and expensive calculations. The data layer uses the **browser** interface to exchange data with **DocStore** and **IndexedDB** for instance.
+Both **collector** and **emitter** use the **message bus** to communicate with the data layer. **Packs**, **data** and **search** are examples of data services, they might have dependencies. Data services could have caching to avoid repeated requests and expensive calculations. The data layer uses the **browser** interface to exchange data with **DocStore** and **IndexedDB** for instance.
+
+Main points of this architecture:
+
+- All data flow happens async making the code much more uniform
+- The data can now be collected on demand, eliminating transitions and accidental logic
+- Elimination of the transition decouples UI from data layer
+- Elimination of the logic means caching can now be mechanical
+- Mechanical caching greatly reduces accidental state
+- Async data flow enables the use of a web worker
 
 ## Async rendering
 
