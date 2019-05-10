@@ -1,7 +1,5 @@
 # TODO
 
-- find examples of complex desktop apps, are they all sync?
-  - [spotify desktop app](https://www.quora.com/How-did-Spotify-make-a-multiplatform-lightweight-well-designed-desktop-application-What-is-the-technology-behind-it)
 - estimate lines of code eliminated
 
 # Rationale
@@ -11,7 +9,15 @@
 1. Data calculation is chunked because JavaScript is single treaded, hence the resulting code is more complicated and slower.
 2. Data retrieval is duplicated because rendering is sync. The data is prepared and cached or stored in various ways. When rendering data is taken from cache or Store.
 3. The data preperation steps are not on demand leading to a lot of accidental state.
-4. Ui and data are coupled through transitions due to having preperation steps.
+4. UI and data are coupled through transitions due to having preperation steps.
+
+## Target architecture
+
+![diagram](diagram.png)
+
+From top to bottom, we have **Store** (essential state) and **statecharts** (accidental logic) dictating what is displayed. The resulting **component tree** drives data requirement by calling the relevant **collector** functions. **Buffer** maps between async when walking the tree, and sync when rendering. **Emitter** sends updates to the data layer.
+
+Both **collector** and **emitter** use the **message bus** to communicate with the data layer. **Packs**, **Data** and **Search** are examples of data services, they might have dependencies. Data services could have caching to avoid repeated requests and expensive calculations. The data layer uses the **browser** interface to exchange data with **DocStore** and **IndexedDB** for instance.
 
 ## Async rendering
 
@@ -96,3 +102,9 @@ In order of preference:
 - remove last step. All data is now on demand.
 - move to webworker. Requires repackaging using webpack, but will give performance boost.
 - remove chunking. Another performance boost.
+
+## Bibliography
+
+1. [No silver bullet](http://faculty.salisbury.edu/~xswang/Research/Papers/SERelated/no-silver-bullet.pdf) - _Frederick P. Brooks, Jr._, 1986
+2. [Out of the tar pit](https://github.com/papers-we-love/papers-we-love/blob/master/design/out-of-the-tar-pit.pdf) - _Ben Mosely, Peter Marks_, 2006
+3. [How did Spotify make a multiplatform, lightweight, well-designed desktop application? What is the technology behind it?](https://www.quora.com/How-did-Spotify-make-a-multiplatform-lightweight-well-designed-desktop-application-What-is-the-technology-behind-it) - _Andreas Blixt_, 2015
