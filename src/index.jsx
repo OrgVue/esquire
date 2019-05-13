@@ -2,7 +2,7 @@ const render = state =>
   lang.Task((rej, res) => {
     // disallow re-entrant rendering
 
-    const app = <components.App state={ui.getState()} />
+    const app = <components.App state={state} />
     reactTreeWalker(app, (element, instance) => {
       if (!instance && typeof element.type === "function") {
         try {
