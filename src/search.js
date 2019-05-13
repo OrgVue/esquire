@@ -1,9 +1,9 @@
 search = (() => {
-  const start = (id, s) =>
+  const start = (go, id, s) =>
     lang.Task.do(function*() {
-      const pack = yield packs.get(id)
-      const properties = yield packs.properties(id)
-      const nodes = yield packs.items(id)
+      const pack = yield packs.get(go, id)
+      const properties = yield packs.properties(go, id)
+      const nodes = yield packs.items(go, id, pack.revision)
       const regex = new RegExp(s, "i")
 
       for (let p = 0; p < properties.length; p += 1) {

@@ -41,6 +41,7 @@ fetch("/tenants/authenticator", {
   // Go, now. Go!
   ui.transition("homescreen", {
     filter: {},
+    go: 1,
     search: "",
     searchResult: []
   })

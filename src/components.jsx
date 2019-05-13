@@ -1,8 +1,8 @@
 ;(() => {
   // Display the packs
-  const onPack = id => ui.transition("pack", { pack: id })
+  const onPack = (id, revision) => ui.transition("pack", { pack: id, revision })
   const Packs = () => {
-    const packs = collectors.listPacks()
+    const packs = collectors.listPacks(ui.getStore().go)
 
     return (
       <>
@@ -15,7 +15,11 @@
         </div>
         <div className="Packs">
           {packs.map(pack => (
-            <div className="Pack" key={pack.id} onClick={() => onPack(pack.id)}>
+            <div
+              className="Pack"
+              key={pack.id}
+              onClick={() => onPack(pack.id, pack.revision)}
+            >
               {pack.dataset.metadata.name}
               <br />
               <span className="Type">
@@ -66,7 +70,9 @@
   // Display list of buckets in filter
   const FilterColumn = ({ filter, property }) => {
     const buckets = collectors.getBuckets(
+      ui.getStore().go,
       ui.getStore().pack,
+      ui.getStore().revision,
       property.key,
       filter
     )
@@ -89,7 +95,10 @@
 
   // Display filter
   const Filter = ({ filter }) => {
-    const { properties } = collectors.getFilterData(ui.getStore().pack)
+    const { properties } = collectors.getFilterData(
+      ui.getStore().go,
+      ui.getStore().pack
+    )
     const sels = properties.filter(property => filter[property.key])
 
     return (
@@ -124,19 +133,35 @@
   const onSearch = search => {
     if (!ui.getStore().search) {
       ui.transition("pack", { search, searchResult: [] })
-      ui.post("search", ["start", ui.getStore().pack, search]).fork(
-        console.log,
-        () => {
-          ui.transition("pack", { search: "" })
-        }
-      )
+      ui.post("search", [
+        "start",
+        ui.getStore().go,
+        ui.getStore().pack,
+        search
+      ]).fork(console.log, () => {
+        ui.transition("pack", { search: "" })
+      })
     }
   }
 
   // Grid
+  const onEdit = (packID, node) => {
+    const label = prompt("Set label", node.label)
+    if (label) {
+      emitters
+        .setLabel(ui.getStore().go, packID, node.index, label)
+        .fork(console.log, revision => {
+          ui.transition("pack", { revision })
+        })
+    }
+  }
+
   const Grid = () => {
+    const packID = ui.getStore().pack
     const { nodes } = collectors.getGridData(
-      ui.getStore().pack,
+      ui.getStore().go,
+      packID,
+      ui.getStore().revision,
       ui.getStore().filter
     )
 
@@ -148,7 +173,7 @@
             className="Row"
             style={{ opacity: node.isGhost ? 0.5 : 1 }}
           >
-            <div>
+            <div className="Label" onClick={() => onEdit(packID, node)}>
               <b>
                 {[..." ".repeat(node.indent)].map((s, i) => (
                   <span key={i}>&nbsp;</span>
@@ -167,7 +192,9 @@
 
   const Pack = () => {
     const { nodes, pack } = collectors.getPackData(
+      ui.getStore().go,
       ui.getStore().pack,
+      ui.getStore().revision,
       ui.getStore().filter
     )
 
@@ -185,7 +212,7 @@
           </div>
           <div className="Title">
             <b>{pack.dataset.metadata.name}</b> |{" "}
-            {lang.wordCase(pack.dataset.metadata.type)}
+            {lang.wordCase(pack.dataset.metadata.type)} | {pack.revision}
           </div>
           <div>Global (Admin)</div>
         </div>
@@ -232,7 +259,10 @@
   const onHome = () => {
     // ui.post("search", ["clearCache"]).fork(console.log, () => {})
     // lang.Cache.clear()
-    ui.transition("homescreen", { searchResult: [] })
+    ui.transition("homescreen", store => ({
+      ...store,
+      go: store.go + 1
+    }))
   }
 
   // Display the app

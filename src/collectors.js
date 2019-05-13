@@ -1,10 +1,19 @@
 collectors = (() => {
-  const listPacks = sc.memo(() => ui.post("packs", ["list"]))
+  const listPacks = sc.memo(go => ui.post("packs", ["list", go]))
+
+  const getPack = sc.memo((go, id) => ui.post("packs", ["get", go, id]))
 
   const getBuckets = sc.memo(
-    (id, key, filter) =>
+    (go, id, revision, key, filter) =>
       lang.Task.do(function*() {
-        const buckets = yield ui.post("packs", ["buckets", id, key, filter])
+        const buckets = yield ui.post("packs", [
+          "buckets",
+          go,
+          id,
+          revision,
+          key,
+          filter
+        ])
 
         return lang.Task.of(buckets)
       }),
@@ -12,9 +21,9 @@ collectors = (() => {
   )
 
   const getFilterData = sc.memo(
-    id =>
+    (go, id) =>
       lang.Task.do(function*() {
-        const properties = yield ui.post("packs", ["properties", id])
+        const properties = yield ui.post("packs", ["properties", go, id])
 
         return lang.Task.of({ properties })
       }),
@@ -22,9 +31,15 @@ collectors = (() => {
   )
 
   const getGridData = sc.memo(
-    (id, filter) =>
+    (go, id, revision, filter) =>
       lang.Task.do(function*() {
-        const nodes = yield ui.post("packs", ["getPartialNodes", id, filter])
+        const nodes = yield ui.post("packs", [
+          "getPartialNodes",
+          go,
+          id,
+          revision,
+          filter
+        ])
 
         return lang.Task.of({ nodes })
       }),
@@ -32,10 +47,16 @@ collectors = (() => {
   )
 
   const getPackData = sc.memo(
-    (id, filter) =>
+    (go, id, revision, filter) =>
       lang.Task.do(function*() {
-        const pack = yield ui.post("packs", ["get", id])
-        const nodes = yield ui.post("packs", ["filteredNodes", id, filter])
+        const pack = yield ui.post("packs", ["get", go, id])
+        const nodes = yield ui.post("packs", [
+          "filteredNodes",
+          go,
+          id,
+          revision,
+          filter
+        ])
 
         return lang.Task.of({
           nodes,
@@ -50,6 +71,7 @@ collectors = (() => {
     getBuckets,
     getFilterData,
     getGridData,
+    getPack,
     getPackData,
     listPacks
   }

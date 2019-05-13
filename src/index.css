@@ -41,6 +41,10 @@ body {
   display: flex;
 }
 
+.Grid .Row .Label {
+  cursor: pointer;
+}
+
 .Grid .Row div {
   overflow-x: hidden;
   padding: 2px 4px;

@@ -5,7 +5,7 @@ const sortFn = (a, b) =>
 
 packs = (() => {
   // List the packs
-  const list = lang.Task.memo(() =>
+  const list = lang.Task.memo(go =>
     lang.Task.do(function*() {
       postMessage({ id: "progress", result: `Loading datasets` })
       const sets = yield network.request({
@@ -27,6 +27,7 @@ packs = (() => {
         views
           .map(view => {
             view.dataset = lookup[view.metadata.dataSetId]
+            view.revision = 1
 
             return view
           })
@@ -37,9 +38,9 @@ packs = (() => {
   )
 
   // Get a pack by id
-  const get = id =>
+  const get = (go, id) =>
     lang.Task.do(function*() {
-      const packs = yield list()
+      const packs = yield list(go)
 
       return lang.Task.of(packs.filter(pack => pack.id === id)[0])
     })
@@ -55,9 +56,9 @@ packs = (() => {
 
   // Retrieve items by pack id
   const items = lang.Task.memo(
-    id =>
+    (go, id, revision) =>
       lang.Task.do(function*() {
-        const pack = yield get(id)
+        const pack = yield get(go, id)
 
         if (CACHE_ENABLED) {
           const cache = yield lang.Task.fromPromise(
@@ -105,14 +106,14 @@ packs = (() => {
 
   // Get tree by pack id
   const tree = lang.Task.memo(
-    id =>
+    (go, id) =>
       lang.Task.do(function*() {
         postMessage({ id: "progress", result: `Building tree` })
 
-        const pack = yield get(id)
+        const pack = yield get(go, id)
         const keyId = pack.metadata.paths[0].id
         const keyParent = pack.metadata.paths[0].parentId
-        const _nodes = yield items(id)
+        const _nodes = yield items(go, id, pack.revision)
 
         const ref = {
           children: []
@@ -177,12 +178,12 @@ packs = (() => {
 
   // Calculate property for given pack id and property key
   const calcProperty = lang.Task.memo(
-    (id, key) =>
+    (go, id, revision, key) =>
       lang.Task.do(function*() {
-        const nodes = yield items(id)
+        const nodes = yield items(go, id, revision)
 
         postMessage({ id: "progress", result: `Calculating ${key}` })
-        const ref = yield tree(id)
+        const ref = yield tree(go, id)
         nodes.forEach(node => {
           let c = ref.lookup[node.id]
 
@@ -218,15 +219,15 @@ packs = (() => {
 
   // Group values for pack id and property key
   const groups = lang.Task.memo(
-    (id, key) =>
+    (go, id, revision, key) =>
       lang.Task.do(function*() {
         postMessage({ id: "progress", result: `Grouping ${key}` })
 
-        const props = yield properties(id)
+        const props = yield properties(go, id)
         const property = props.filter(p => p.key === key)[0]
-        if (property.isCalc) yield calcProperty(id, key)
+        if (property.isCalc) yield calcProperty(go, id, revision, key)
 
-        const nodes = yield items(id)
+        const nodes = yield items(go, id, revision)
 
         return lang.Task.of(
           Object.entries(
@@ -246,9 +247,9 @@ packs = (() => {
 
   // List properties by pack id
   const properties = lang.Task.memo(
-    id =>
+    (go, id) =>
       lang.Task.do(function*() {
-        const pack = yield get(id)
+        const pack = yield get(go, id)
 
         return lang.Task.of(
           [
@@ -282,9 +283,9 @@ packs = (() => {
 
   // Get the mask of filtered nodes
   const filteredNodes = lang.Task.memo(
-    (id, filter) =>
+    (go, id, revision, filter) =>
       lang.Task.do(function*() {
-        const nodes = yield items(id)
+        const nodes = yield items(go, id, revision)
         let mask = nodes.reduce((r, node, i) => {
           indices.set(r, i)
           return r
@@ -293,7 +294,7 @@ packs = (() => {
         for (const key in filter) {
           if (Object.entries(filter[key]).length === 0) continue
 
-          const grps = yield groups(id, key)
+          const grps = yield groups(go, id, revision, key)
           const sum = grps.reduce((r, [name, nodes]) => {
             if (!filter[key][name]) return r
 
@@ -312,12 +313,12 @@ packs = (() => {
   )
 
   // Get filtered nodes with first N properties to certain depth
-  const getPartialNodes = lang.Task.memo((id, filter) =>
+  const getPartialNodes = lang.Task.memo((go, id, revision, filter) =>
     lang.Task.do(function*() {
-      const pack = yield get(id)
-      const props = yield properties(id)
-      const ref = yield tree(id)
-      const mask = yield filteredNodes(id, filter)
+      const pack = yield get(go, id)
+      const props = yield properties(go, id)
+      const ref = yield tree(go, id)
+      const mask = yield filteredNodes(go, id, revision, filter)
 
       const result = []
       const list = ref.children.map(c => [1, c])
@@ -326,6 +327,7 @@ packs = (() => {
         result.push({
           id: n.node.id,
           indent: d,
+          index: n.node.index,
           isGhost: mask !== undefined && !indices.test(mask, n.node.index),
           label: n.node.properties[pack.metadata.titleField],
           values: props
@@ -344,9 +346,9 @@ packs = (() => {
 
   // List bucket with filtered nodes for pack id, property key and filter state
   const buckets = lang.Task.memo(
-    (id, key, filter) =>
+    (go, id, revision, key, filter) =>
       lang.Task.do(function*() {
-        const nodes = yield items(id)
+        const nodes = yield items(go, id, revision)
         let mask = nodes.reduce((r, node, i) => {
           indices.set(r, i)
           return r
@@ -358,7 +360,7 @@ packs = (() => {
         for (const k in filter) {
           if (k === key || Object.entries(filter[k]).length === 0) continue
 
-          const grps = yield groups(id, k)
+          const grps = yield groups(go, id, revision, k)
           const sum = grps.reduce((r, [name, nodes]) => {
             if (!filter[k][name]) return r
 
@@ -370,7 +372,7 @@ packs = (() => {
           }
         }
 
-        const grps = yield groups(id, key)
+        const grps = yield groups(go, id, revision, key)
 
         const result = grps.map(([val, nodes]) => ({
           name: String(val),
@@ -383,6 +385,17 @@ packs = (() => {
     { exclude: [1] }
   )
 
+  // Set label for node
+  const setLabel = (go, id, index, label) =>
+    lang.Task.do(function*() {
+      const pack = yield get(go, id)
+      const nodes = yield items(go, id, pack.revision)
+      nodes[index].properties[pack.metadata.titleField] = label
+      pack.revision += 1
+
+      return lang.Task.of(pack.revision)
+    })
+
   // Export
   return {
     buckets,
@@ -391,6 +404,7 @@ packs = (() => {
     items,
     get,
     list,
-    properties
+    properties,
+    setLabel
   }
 })()
