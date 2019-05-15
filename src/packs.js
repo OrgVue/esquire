@@ -56,7 +56,7 @@ packs = (() => {
 
   // Retrieve items by pack id
   const items = lang.Task.memo(
-    (go, id, revision) =>
+    (go, id) =>
       lang.Task.do(function*() {
         const pack = yield get(go, id)
 
@@ -113,7 +113,7 @@ packs = (() => {
         const pack = yield get(go, id)
         const keyId = pack.metadata.paths[0].id
         const keyParent = pack.metadata.paths[0].parentId
-        const _nodes = yield items(go, id, pack.revision)
+        const _nodes = yield items(go, id)
 
         const ref = {
           children: []
@@ -180,7 +180,7 @@ packs = (() => {
   const calcProperty = lang.Task.memo(
     (go, id, revision, key) =>
       lang.Task.do(function*() {
-        const nodes = yield items(go, id, revision)
+        const nodes = yield items(go, id)
 
         postMessage({ id: "progress", result: `Calculating ${key}` })
         const ref = yield tree(go, id)
@@ -227,7 +227,7 @@ packs = (() => {
         const property = props.filter(p => p.key === key)[0]
         if (property.isCalc) yield calcProperty(go, id, revision, key)
 
-        const nodes = yield items(go, id, revision)
+        const nodes = yield items(go, id)
 
         return lang.Task.of(
           Object.entries(
@@ -285,7 +285,7 @@ packs = (() => {
   const filteredNodes = lang.Task.memo(
     (go, id, revision, filter) =>
       lang.Task.do(function*() {
-        const nodes = yield items(go, id, revision)
+        const nodes = yield items(go, id)
         let mask = nodes.reduce((r, node, i) => {
           indices.set(r, i)
           return r
@@ -348,7 +348,7 @@ packs = (() => {
   const buckets = lang.Task.memo(
     (go, id, revision, key, filter) =>
       lang.Task.do(function*() {
-        const nodes = yield items(go, id, revision)
+        const nodes = yield items(go, id)
         let mask = nodes.reduce((r, node, i) => {
           indices.set(r, i)
           return r
@@ -389,7 +389,7 @@ packs = (() => {
   const setLabel = (go, id, index, label) =>
     lang.Task.do(function*() {
       const pack = yield get(go, id)
-      const nodes = yield items(go, id, pack.revision)
+      const nodes = yield items(go, id)
       nodes[index].properties[pack.metadata.titleField] = label
       pack.revision += 1
 
