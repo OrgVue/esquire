@@ -20,9 +20,11 @@ Main points of this architecture:
 - All data flow happens async making the code much more uniform
 - The data can now be collected on demand, eliminating transitions and accidental logic
 - Elimination of the transition decouples UI from data layer
+- Elimination of transisions also avoids need to pass temporary values using Store
 - Elimination of the logic means caching can now be mechanical
 - Mechanical caching greatly reduces accidental state
 - Async data flow enables the use of a web worker
+- Due to data on demand and web worker exporting becomes much simpler
 
 ## Async rendering
 
