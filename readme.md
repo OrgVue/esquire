@@ -102,11 +102,14 @@ In order of preference:
 
 ## Migration
 
-- change steps to (uniformly) cache data, not store it, using primitive from Store (e.g. `id`, `key`). This removes accidental state.
-- nibble away steps in reverse order, leaving a single step. This removes transitions.
 - separate progress bar from main render tree. Needed before we can render async.
 - introduce async rendering (interlace using timeouts in memo). Note: this will expose transitions within transitions
-- remove last step. All data is now on demand.
+- change steps to (uniformly) cache data, not store it, using primitive from Store (e.g. `id`, `key`). This removes accidental state.
+  - define data layer function signatures
+  - create data layer api, feeding off of Store
+  - repoint components to api
+  - reimplement api using direct calls
+- nibble away steps in reverse order. This removes transitions. All data is now on demand.
 - move to webworker. Requires repackaging using webpack, but will give performance boost.
 - remove chunking. Another performance boost.
 
