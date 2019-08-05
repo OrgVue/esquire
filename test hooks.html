@@ -1,0 +1,107 @@
+<html>
+
+<head>
+  <title>test hooks</title>
+  <meta charset="utf-8" />
+
+  <script src="lib/react.development.js"></script>
+  <script src="lib/react-dom.development.js"></script>
+  <script src="lib/babel.min.js"></script>
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+      // Notes
+      // Memoizing a function/component, but then triggering recalculate from within is wrong.
+      // Either function is pure and you can memoize, or it's not.
+      // Leads to issue of data update triggering recalculate, but resulting revision not being in store yet.
+      // Solve by having wrapper/connect collect the props, then using a pure, memoized functions.
+      // These connectors could have local rerender triggered through context/store hooks
+
+      // memo
+      const memo = (fn) => {
+        const cache = {}
+
+        return (...args) => {
+          const hash = JSON.stringify(args)
+
+          if (!cache.hasOwnProperty(hash)) cache[hash] = fn(...args)
+
+          return cache[hash]
+        }
+      }
+
+      // service
+      const dataService = (() => {
+        let revision = 1
+        let value = 42
+
+        return {
+          getValue: memo((revision) => value),
+          updateValue: (fn) => {
+            value = fn(value)
+            revision += 1
+
+            return revision
+          },
+        }
+      })()
+
+      // store hook
+      const StoreContext = React.createContext()
+      const useStore = () => {
+        const store = React.useContext(StoreContext)
+
+        return store
+      }
+
+      // data service hook
+      const useData = () => dataService
+
+      // static component
+      const A = React.memo(() => <div>{"" + new Date()}</div>)
+
+      // dynamic component
+      const B = React.memo(() => {
+        const { revision } = useStore()
+        const data = useData().getValue(revision)
+
+        return <div>{"" + new Date() + " " + data}</div>
+      })
+
+      // static container
+      const C = React.memo(() =>
+        <div style={{backgroundColor: "#eee"}}>
+          <B />
+        </div>)
+
+      let store = { revision: 1 }
+      const App = () => {
+        const onClick = () => {
+          store = ({
+            ...store,
+            revision: dataService.updateValue(value => value + 1)
+          })
+
+          render()
+          render()
+        }
+
+        return <StoreContext.Provider value={store}>
+          <A />
+          <C />
+          <button onClick={onClick}>Update</button>
+        </StoreContext.Provider>
+      }
+
+      // render
+      const render = () => ReactDOM.render(<App />, document.getElementById("app"))
+
+      render()
+      render()
+    </script>
+</body>
+
+</html>
