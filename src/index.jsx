@@ -34,7 +34,7 @@ window.ui = sc.UIController(render, worker)
 fetch("/tenants/authenticator", {
   body: JSON.stringify({
     login: "rodinhart@gmail.com",
-    password: "Wachtwoord123"
+    password: localStorage.getItem("pwd")
   }),
   method: "POST"
 }).then(response => {
