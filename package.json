@@ -1,14 +1,14 @@
 {
   "author": "Concentra Analytics",
   "devDependencies": {
-    "webpack": "^4.29.5",
-    "webpack-cli": "^3.2.3",
-    "webpack-dev-server": "^3.1.14"
+    "webpack": "^4.42.1",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
   },
   "name": "esquire",
   "private": true,
   "scripts": {
     "start": "webpack-dev-server"
   },
-  "version": "0.1.0"
+  "version": "0.1.1"
 }
